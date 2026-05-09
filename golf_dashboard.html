@@ -8,6 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
+
 :root {
   --bg: #f0ece3;
   --card: #faf7f2;
@@ -293,9 +294,11 @@ tr.excluded-row td:last-child { text-decoration: none; }
 }
 .excl-bar button:hover { background: var(--red); color: #fff; }
 
+
 </style>
 </head>
 <body>
+
 
 <nav>
   <div class="nav-logo">
@@ -550,65 +553,37 @@ tr.excluded-row td:last-child { text-decoration: none; }
 </main>
 
 <script>
-// ── EXCLUDED IDS (scrambles / match play) ─────────────────────────
-const EXCLUDED_IDS = new Set([
-  // Ejemplo: 12345678
-]);
 
-// ── CARGA ASÍNCRONA DE DATOS ──────────────────────────────────────
-// Datos en /data/ — el HTML no necesita actualizarse al jugar
-async function _loadAll() {
-  const loadDiv = document.createElement('div');
-  loadDiv.id = 'loading';
-  loadDiv.style.cssText = 'position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg);z-index:9999;font-size:24px;color:var(--muted)';
-  loadDiv.textContent = 'Cargando datos...';
-  document.body.appendChild(loadDiv);
+// ── CONFIG ────────────────────────────────────────────────────────
+const EXCLUDED_IDS = new Set([]);
+const COURSE_NORM  = {
+  38539:"El Fresnillo - Naturavila", 36220:"Club de Golf Lerma",
+  33083:"San Roque Club - Old Course", 31361:"San Roque Club - New Course",
+  38557:"San Roque Club - New Course", 38499:"Las Margas Golf",
+  38553:"Costa Ballena Golf", 30604:"Costa Ballena Golf",
+  30606:"Costa Ballena Golf", 30601:"Costa Ballena Golf",
+  30607:"Costa Ballena Golf", 38451:"Club de Golf La Dehesa",
+  38639:"INFINITUM Golf - Ruins",
+};
+function normCourse(cid, name) { return COURSE_NORM[cid] || name; }
 
-  const [rRes, hRes, cRes] = await Promise.all([
-    fetch('data/rounds.json'),
-    fetch('data/holes.json').catch(() => ({ok:false, json:()=>({})})),
-    fetch('data/campos.json'),
-  ]);
+// ── GLOBALS (rellenos al cargar) ──────────────────────────────────
+let DATA=[], D18=[], D18_ARCCOS=[], CAMPOS_PAIS={}, HOLES_DATA={};
 
-  window.RAW          = await rRes.json();
-  window.LEGACY       = [];
-  window.HOLES_DATA   = hRes.ok ? await hRes.json() : {};
-  window.CAMPOS_PAIS  = await cRes.json();
-
-  document.getElementById('loading').remove();
-_loadAll().then(() => {
-
-// ── GESTIÓN DE EXCLUSIONES ────────────────────────────────────
+// ── EXCLUSIONES (localStorage) ────────────────────────────────────
 const EXCL_KEY = 'golf_excluded_ids';
-
 function loadExclusions() {
   try {
-    const stored = localStorage.getItem(EXCL_KEY);
-    if (stored) {
-      const ids = JSON.parse(stored);
-      ids.forEach(id => EXCLUDED_IDS.add(id));
-    }
+    const s = localStorage.getItem(EXCL_KEY);
+    if (s) JSON.parse(s).forEach(id => EXCLUDED_IDS.add(id));
   } catch(e) {}
-  // También intentar cargar data/excluded.json
-  fetch('data/excluded.json')
-    .then(r => r.ok ? r.json() : [])
-    .then(ids => { ids.forEach(id => EXCLUDED_IDS.add(id)); })
-    .catch(() => {});
 }
-
 function toggleExclusion(roundId) {
-  if (EXCLUDED_IDS.has(roundId)) {
-    EXCLUDED_IDS.delete(roundId);
-  } else {
-    EXCLUDED_IDS.add(roundId);
-  }
-  // Guardar en localStorage
+  if (EXCLUDED_IDS.has(roundId)) EXCLUDED_IDS.delete(roundId);
+  else EXCLUDED_IDS.add(roundId);
   localStorage.setItem(EXCL_KEY, JSON.stringify([...EXCLUDED_IDS]));
-  // Refrescar la vista actual
-  renderRounds();
-  updateExclBar();
+  rebuildD18(); renderRounds(); updateExclBar();
 }
-
 function updateExclBar() {
   const bar = document.getElementById('excl-bar');
   const n = EXCLUDED_IDS.size;
@@ -616,838 +591,482 @@ function updateExclBar() {
     bar.style.display = 'flex';
     document.getElementById('excl-count').textContent =
       n + ' vuelta' + (n>1?'s':'') + ' excluida' + (n>1?'s':'') + ' de estadísticas';
-  } else {
-    bar.style.display = 'none';
-  }
+  } else { bar.style.display = 'none'; }
 }
-
 function exportExcluded() {
-  const ids = [...EXCLUDED_IDS];
-  const blob = new Blob([JSON.stringify(ids)], {type:'application/json'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'excluded.json';
-  a.click();
+  const blob = new Blob([JSON.stringify([...EXCLUDED_IDS])], {type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'excluded.json'; a.click();
 }
 
-function normCourse(cid, name) {
-  return COURSE_NORM[cid] || name;
-}
-
-// ── MERGE PARTIAL ROUNDS ─────────────────────────────────────────
-// Fusiona vueltas del mismo día que juntas suman ~18 hoyos
-// Cubre: mismo campo (Barberan), distintos campos del mismo complejo (Jeju, INFINITUM)
+// ── MERGE PARTIAL ROUNDS ──────────────────────────────────────────
 function mergeRounds(raw) {
-  // Agrupar por fecha
   const byDate = {};
-  raw.forEach(r => {
-    if (!byDate[r.date]) byDate[r.date] = [];
-    byDate[r.date].push(r);
-  });
-
-  const usedIds = new Set();
-  const merged = [];
-
-  // Procesar cada día
-  Object.values(byDate).forEach(dayRounds => {
-    // Ignorar rondas de 1-2 hoyos si hay una de 18H el mismo día
-    const full18 = dayRounds.filter(r => r.holes >= 17);
-    const partials = dayRounds.filter(r => r.holes < 17);
-
-    if (full18.length > 0 && partials.length > 0) {
-      // Marcar las parciales diminutas (1-2H) como usadas, ignorarlas
-      partials.filter(r => r.holes <= 2).forEach(r => usedIds.add(r.id));
-    }
-
-    // Buscar grupos de parciales que sumen ~18H
-    const candidates = dayRounds.filter(r => !usedIds.has(r.id) && r.holes < 17 && r.holes > 0);
-    const totalHoles = candidates.reduce((s, r) => s + (r.holes||0), 0);
-
-    if (candidates.length >= 2 && totalHoles >= 16 && totalHoles <= 20) {
-      // Fusionar todos los candidatos del día
-      candidates.forEach(r => usedIds.add(r.id));
-      const base = candidates[0];
-      
-      // Nombre: si mismo campo usar ese; si distintos, buscar prefijo común + sufijos
-      const names = [...new Set(candidates.map(r => normCourse(r.cid, r.course)))];
+  raw.forEach(r => { if (!byDate[r.date]) byDate[r.date]=[]; byDate[r.date].push(r); });
+  const used = new Set(), merged = [];
+  Object.values(byDate).forEach(day => {
+    const full = day.filter(r => r.holes >= 17);
+    const partial = day.filter(r => r.holes < 17);
+    if (full.length && partial.length) partial.filter(r => r.holes<=2).forEach(r => used.add(r.id));
+    const cands = day.filter(r => !used.has(r.id) && r.holes<17 && r.holes>0);
+    const total = cands.reduce((s,r) => s+(r.holes||0), 0);
+    if (cands.length >= 2 && total >= 16 && total <= 20) {
+      cands.forEach(r => used.add(r.id));
+      const base = cands[0];
+      const names = [...new Set(cands.map(r => normCourse(r.cid, r.course)))];
       let courseName;
-      if (names.length === 1) {
-        courseName = names[0];
-      } else {
-        // Intentar extraer prefijo común y combinar sufijos
-        // Ej: "INFINITUM Golf - Ruins" + "INFINITUM Golf - Hills" → "INFINITUM Golf - Ruins + Hills"
+      if (names.length === 1) { courseName = names[0]; }
+      else {
         const parts = names.map(n => n.split(' - '));
         const prefix = parts[0][0];
-        const allSamePrefix = parts.every(p => p[0] === prefix);
-        if (allSamePrefix && parts[0].length > 1) {
-          const suffixes = parts.map(p => p.slice(1).join(' - ')).filter(Boolean);
-          courseName = prefix + ' - ' + suffixes.join(' + ');
+        if (parts.every(p => p[0]===prefix) && parts[0].length>1) {
+          courseName = prefix + ' - ' + parts.map(p => p.slice(1).join(' - ')).filter(Boolean).join(' + ');
         } else {
-          // Fallback: primera palabra de cada nombre
           const words = names.map(n => n.split(/[-~]/)[0].trim());
-          const uniq = words.filter((v,i,a) => a.indexOf(v) === i);
-          courseName = uniq.length === 1 ? uniq[0] + ' (18H)' : uniq.join(' + ');
+          const uniq = words.filter((v,i,a) => a.indexOf(v)===i);
+          courseName = uniq.length===1 ? uniq[0]+' (18H)' : uniq.join(' + ');
         }
       }
-
-      const sumField = (f, nullVal=null) => {
-        const vals = candidates.map(r=>r[f]).filter(x=>x!=null);
-        return vals.length ? vals.reduce((a,b)=>a+b,0) : nullVal;
-      };
-
-      merged.push({
-        id: base.id, cid: base.cid,
-        course: courseName,
-        pais: getPais(base.cid, base.course),
-        ciudad: getCiudad(base.cid, base.course),
-        date: base.date, y: base.y, m: base.m,
-        holes: totalHoles,
-        shots: sumField('shots', 0),
-        ou: sumField('ou', 0),
-        putts: sumField('putts'),
-        gir: sumField('gir'), girT: sumField('girT'),
-        fwH: sumField('fwH'), fwR: sumField('fwR'),
-        fwL: sumField('fwL'), fwT: sumField('fwT'),
-        merged: true, src: base.src
-      });
+      const sum = f => { const v=cands.map(r=>r[f]).filter(x=>x!=null); return v.length?v.reduce((a,b)=>a+b,0):null; };
+      merged.push({id:base.id,cid:base.cid,course:courseName,date:base.date,y:base.y,m:base.m,
+        holes:total,shots:sum('shots')||0,ou:sum('ou')||0,putts:sum('putts'),
+        gir:sum('gir'),girT:sum('girT'),fwH:sum('fwH'),fwR:sum('fwR'),fwL:sum('fwL'),fwT:sum('fwT'),
+        merged:true,src:base.src});
     }
   });
-
-  // Añadir las no fusionadas
   raw.forEach(r => {
-    if (!usedIds.has(r.id)) {
-      const nr = {...r};
-      nr.course = normCourse(r.cid, r.course);
-      nr.pais = getPais(r.cid, r.course);
-      nr.ciudad = getCiudad(r.cid, r.course);
+    if (!used.has(r.id)) {
+      const nr = {...r}; nr.course = normCourse(r.cid, r.course);
+      nr.pais = getPais(r.cid, r.course); nr.ciudad = getCiudad(r.cid, r.course);
       merged.push(nr);
     }
   });
-
   return merged;
 }
 
-// Combinar Arccos (RAW) + Excel histórico (LEGACY)
-// LEGACY usa IDs negativos para evitar duplicados
-const DATA = mergeRounds([...window.RAW]).sort((a,b)=>b.date.localeCompare(a.date));
-// D18: solo vueltas completas de 18H (o 17H por hoyos anulados)
-// Las dos vueltas de 9H del mismo día/campo ya están fusionadas a 18H por mergeRounds()
-// Las vueltas de 9H sueltas (Jeju días separados, etc.) quedan excluidas de estadísticas
-const D18_ALL = DATA.filter(r => r.holes >= 17 && r.holes <= 18 && !r.src); 
-// Nota: r.src === 'xls' son datos del Excel histórico (sin GIR/putts)
-// Para stats que necesiten GIR/putts usar D18_ARCCOS
-const D18_ARCCOS = D18_ALL.filter(r => !r.src); // Solo Arccos (con datos completos)
-const D18 = D18_ALL.filter(r => !EXCLUDED_IDS.has(r.id)); // Excluye scrambles/match play
-
-// Años únicos
-const years = [...new Set(DATA.map(r=>r.y))].sort();
-const sel = document.getElementById('f-year');
-years.forEach(y => sel.innerHTML += `<option value="${y}">${y}</option>`);
-const paises = [...new Set(DATA.map(r=>r.pais).filter(Boolean))].sort();
-const paiSel = document.getElementById('f-pais');
-paises.forEach(p => paiSel.innerHTML += `<option value="${p}">${p}</option>`);
-
-document.getElementById('data-date').textContent = 
-  'Actualizado: ' + DATA[0].date;
+// ── HELPERS ───────────────────────────────────────────────────────
+function getPais(cid, name) {
+  const n = normCourse(cid, name);
+  return (CAMPOS_PAIS[n]||CAMPOS_PAIS[name]||{}).pais||'';
+}
+function getCiudad(cid, name) {
+  const n = normCourse(cid, name);
+  return (CAMPOS_PAIS[n]||CAMPOS_PAIS[name]||{}).ciudad||'';
+}
+function rebuildD18() {
+  D18_ARCCOS = DATA.filter(r => r.holes>=17 && r.holes<=18 && !r.src);
+  D18 = D18_ARCCOS.filter(r => !EXCLUDED_IDS.has(r.id));
+}
+const avg  = arr => arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : null;
+const fmt  = n => n==null ? '—' : n.toFixed(1);
+const ouColor = v => v<0?'ou-neg':v===0?'ou-par':'ou-pos';
+const ouFmt   = v => v<0?v:'+'+v;
 
 // ── CHART DEFAULTS ────────────────────────────────────────────────
 Chart.defaults.color = '#6b6454';
 Chart.defaults.borderColor = '#d4cbb8';
-const GOLD = '#c9a84c', GREEN = '#40916c', RED='#e05252', BLUE='#5299e0';
+const GOLD='#9a6e1a', GREEN='#1e5e3a', RED='#c0392b', BLUE='#1a6db3';
 
 function lineChart(id, labels, datasets, opts={}) {
-  const ctx = document.getElementById(id);
-  if (!ctx) return;
-  return new Chart(ctx, {
-    type:'line',
-    data:{labels, datasets},
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      plugins:{legend:{display:datasets.length>1, labels:{color:'#6b6454',boxWidth:12}}},
-      scales:{
-        x:{grid:{color:'#d4cbb8'}, ticks:{color:'#6b6454'}},
-        y:{grid:{color:'#d4cbb8'}, ticks:{color:'#6b6454'}, ...opts.y}
-      },
-      elements:{line:{tension:.3}, point:{radius:3, hoverRadius:5}},
-      ...opts
-    }
-  });
+  const ctx = document.getElementById(id); if (!ctx) return;
+  if (ctx._ch) ctx._ch.destroy();
+  ctx._ch = new Chart(ctx, {type:'line', data:{labels,datasets}, options:{
+    responsive:true, maintainAspectRatio:false,
+    plugins:{legend:{display:datasets.length>1,labels:{color:'#6b6454',boxWidth:12}}},
+    scales:{x:{grid:{color:'#d4cbb8'},ticks:{color:'#6b6454'}},
+            y:{grid:{color:'#d4cbb8'},ticks:{color:'#6b6454'},...(opts.y||{})}},
+    elements:{line:{tension:.3},point:{radius:3,hoverRadius:5}}, ...opts
+  }});
 }
-
 function barChart(id, labels, datasets, opts={}) {
-  const ctx = document.getElementById(id);
-  if (!ctx) return;
-  return new Chart(ctx, {
-    type:'bar',
-    data:{labels, datasets},
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      plugins:{legend:{display:false}},
-      scales:{
-        x:{grid:{color:'#d4cbb8'}, ticks:{color:'#6b6454'}},
-        y:{grid:{color:'#d4cbb8'}, ticks:{color:'#6b6454'}, ...opts.y}
-      },
-      ...opts
-    }
-  });
+  const ctx = document.getElementById(id); if (!ctx) return;
+  if (ctx._ch) ctx._ch.destroy();
+  ctx._ch = new Chart(ctx, {type:'bar', data:{labels,datasets}, options:{
+    responsive:true, maintainAspectRatio:false,
+    plugins:{legend:{display:false}},
+    scales:{x:{grid:{color:'#d4cbb8'},ticks:{color:'#6b6454'}},
+            y:{grid:{color:'#d4cbb8'},ticks:{color:'#6b6454'},...(opts.y||{})}}, ...opts
+  }});
 }
 
-// ── HELPERS ───────────────────────────────────────────────────────
-const avg = arr => arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : null;
-const pct = (a,b) => b>0 ? Math.round(a/b*100) : null;
-const fmt = n => n==null?'—':n.toFixed(1);
-const ouColor = v => v < 0 ? 'ou-neg' : v === 0 ? 'ou-par' : 'ou-pos';
-const ouFmt = v => v < 0 ? v : '+' + v;
-
-// ── RESUMEN PAGE ──────────────────────────────────────────────────
+// ── RESUMEN ───────────────────────────────────────────────────────
 function initResumen() {
-  // KPIs
-  const ou18 = D18.map(r=>r.ou).filter(x=>x!=null);
-  const shots18 = D18.map(r=>r.shots).filter(x=>x);
+  const ou18    = D18.map(r=>r.ou).filter(x=>x!=null);
+  const shots18 = D18.filter(r=>r.shots).map(r=>r.shots);
   const putts18 = D18.filter(r=>r.putts).map(r=>r.putts);
-  const gir18 = D18.filter(r=>r.girT>0).map(r=>r.gir/r.girT*100);
+  const gir18   = D18.filter(r=>r.girT>0).map(r=>r.gir/r.girT*100);
   const thisYear = DATA.filter(r=>r.y===new Date().getFullYear());
-  const last12 = D18.slice(0,12);
-  const recent_avg = avg(last12.map(r=>r.ou).filter(x=>x!=null));
-  
+  const recent   = D18.slice(0,12).map(r=>r.ou).filter(x=>x!=null);
+
+  document.getElementById('resumen-sub').textContent = DATA.length + ' vueltas registradas desde ' + Math.min(...DATA.map(r=>r.y));
+  document.getElementById('data-date').textContent = 'Actualizado: ' + DATA[0].date;
+
   const kpis = [
-    {label:'Total vueltas', val: DATA.length, sub: D18.length + ' completas (18H)'},
-    {label:'Scoring avg (18H)', val: fmt(avg(shots18)), sub: 'S/Par: ' + (avg(ou18)>0?'+':'') + fmt(avg(ou18))},
-    {label:'GIR %', val: fmt(avg(gir18)) + '%', sub: 'Greens en regulación'},
-    {label:'Putts avg', val: fmt(avg(putts18)), sub: 'por vuelta de 18H'},
-    {label:'Este año', val: thisYear.length, sub: 'vueltas en ' + new Date().getFullYear()},
-    {label:'Tendencia (12 vueltas)', val: (recent_avg>0?'+':'') + fmt(recent_avg), sub: 'S/Par promedio reciente'},
-    {label:'Mejor vuelta', val: Math.min(...ou18), sub: D18.find(r=>r.ou===Math.min(...ou18))?.course?.split(' ')[0] || ''},
-    {label:'Años activo', val: years.length, sub: years[0] + ' – ' + years[years.length-1]},
+    {label:'Total vueltas',       val:DATA.length,                  sub:D18.length+' completas (18H)'},
+    {label:'Scoring avg (18H)',   val:fmt(avg(shots18)),            sub:'S/Par: '+(avg(ou18)>0?'+':'')+fmt(avg(ou18))},
+    {label:'GIR %',               val:fmt(avg(gir18))+'%',          sub:'Greens en regulación'},
+    {label:'Putts avg',           val:fmt(avg(putts18)),            sub:'por vuelta de 18H'},
+    {label:'Este año',            val:thisYear.length,              sub:'vueltas en '+new Date().getFullYear()},
+    {label:'Tendencia (12 vueltas)', val:(avg(recent)>0?'+':'')+fmt(avg(recent)), sub:'S/Par promedio reciente'},
+    {label:'Mejor vuelta',        val:Math.min(...ou18),            sub:(D18.find(r=>r.ou===Math.min(...ou18))||{}).course||''},
+    {label:'Años activo',         val:[...new Set(DATA.map(r=>r.y))].length, sub:Math.min(...DATA.map(r=>r.y))+' – '+Math.max(...DATA.map(r=>r.y))},
   ];
-  
-  document.getElementById('resumen-sub').textContent = 
-    DATA.length + ' vueltas registradas desde ' + years[0];
-  
-  const grid = document.getElementById('kpi-grid');
-  grid.innerHTML = kpis.map(k=>`
-    <div class="kpi">
-      <div class="kpi-label">${k.label}</div>
-      <div class="kpi-val">${k.val}</div>
-      <div class="kpi-sub">${k.sub}</div>
-    </div>`).join('');
-  
+  document.getElementById('kpi-grid').innerHTML = kpis.map(k =>
+    `<div class="kpi"><div class="kpi-label">${k.label}</div><div class="kpi-val">${k.val}</div><div class="kpi-sub">${k.sub}</div></div>`
+  ).join('');
+
   // Scoring por año
-  const byYear = {};
-  D18.forEach(r => {
-    if (!byYear[r.y]) byYear[r.y] = [];
-    if (r.ou != null) byYear[r.y].push(r.ou);
+  const years = [...new Set(D18.map(r=>r.y))].sort();
+  const byY   = y => D18.filter(r=>r.y===y).map(r=>r.ou).filter(x=>x!=null);
+  lineChart('chart-yearly', years, [{label:'S/Par avg',
+    data:years.map(y=>+fmt(avg(byY(y)))), borderColor:GOLD, backgroundColor:GOLD+'22', fill:true}]);
+
+  // Distribución (sin +5+)
+  const bins = {'-5+':0,'-4':0,'-3':0,'-2':0,'-1':0,'E':0,'+1':0,'+2':0,'+3':0,'+4':0,'+5+':0};
+  ou18.forEach(v => {
+    if(v<=-5)bins['-5+']++; else if(v===-4)bins['-4']++; else if(v===-3)bins['-3']++;
+    else if(v===-2)bins['-2']++; else if(v===-1)bins['-1']++; else if(v===0)bins['E']++;
+    else if(v===1)bins['+1']++; else if(v===2)bins['+2']++; else if(v===3)bins['+3']++;
+    else if(v===4)bins['+4']++; else bins['+5+']++;
   });
-  const yrs = Object.keys(byYear).sort();
-  lineChart('chart-yearly', yrs, [{
-    label:'S/Par avg',
-    data: yrs.map(y => +fmt(avg(byYear[y]))),
-    borderColor:GOLD, backgroundColor:GOLD+'22', fill:true
+  const dk = Object.keys(bins).filter(k=>k!=='+5+');
+  barChart('chart-dist', dk, [{
+    data:dk.map(k=>bins[k]),
+    backgroundColor:dk.map(k=>{const v=parseInt(k);return isNaN(v)||v<=0?GREEN+'cc':v===1?GOLD+'cc':v<=3?RED+'88':RED+'cc';})
   }]);
-  
-  // Distribución
-  const eagle=[], birdie=[], par=[], bogey=[], double=[];
-  D18.forEach(r => {
-    if (!r.holes || !r.ou) return;
-  });
-  const ou_all = D18.map(r=>r.ou).filter(x=>x!=null);
-  const bins = {'-5+':0, '-4':0, '-3':0, '-2':0, '-1':0, 'E':0, '+1':0, '+2':0, '+3':0, '+4':0, '+5+':0};
-  ou_all.forEach(v => {
-    if (v <= -5) bins['-5+']++;
-    else if (v === -4) bins['-4']++;
-    else if (v === -3) bins['-3']++;
-    else if (v === -2) bins['-2']++;
-    else if (v === -1) bins['-1']++;
-    else if (v === 0) bins['E']++;
-    else if (v === 1) bins['+1']++;
-    else if (v === 2) bins['+2']++;
-    else if (v === 3) bins['+3']++;
-    else if (v === 4) bins['+4']++;
-    else bins['+5+']++;
-  });
-  // Excluir '+5+' del gráfico (distorsiona escala)
-  const distKeys = Object.keys(bins).filter(k => k !== '+5+');
-  const colors = distKeys.map(k => {
-    const v = parseInt(k);
-    if (isNaN(v) || v <= 0) return GREEN + 'cc';
-    if (v === 1) return GOLD + 'cc';
-    if (v <= 3) return RED + '88';
-    return RED + 'cc';
-  });
-  barChart('chart-dist', distKeys, [{
-    data: distKeys.map(k => bins[k]),
-    backgroundColor: colors
-  }]);
-  // Nota al pie con los excluidos
-  if (bins['+5+'] > 0) {
-    setTimeout(() => {
-      const card = document.getElementById('chart-dist').closest('.card');
-      card.insertAdjacentHTML('beforeend',
-        `<div style="color:var(--muted);font-size:11px;margin-top:6px;text-align:right">
-          * ${bins['+5+']} vueltas con +5 o más excluidas para mantener escala
-        </div>`);
-    }, 100);
+  if (bins['+5+']>0) {
+    const el=document.getElementById('chart-dist').closest('.card');
+    el.insertAdjacentHTML('beforeend',`<div style="color:var(--muted);font-size:11px;margin-top:6px;text-align:right">* ${bins['+5+']} vueltas con +5 o más excluidas de la escala</div>`);
   }
-  
-  // Últimas 20 vueltas
+
+  // Últimas 20
   const last20 = D18.slice(0,20).reverse();
-  lineChart('chart-recent', last20.map(r=>r.date.slice(5)), [{
-    label:'S/Par',
-    data: last20.map(r=>r.ou),
-    borderColor:GOLD, backgroundColor:GOLD+'33', fill:true,
-    pointBackgroundColor: last20.map(r=>r.ou<=0?GREEN:RED)
-  }]);
-  
+  lineChart('chart-recent', last20.map(r=>r.date.slice(5)), [{label:'S/Par',
+    data:last20.map(r=>r.ou), borderColor:GOLD, backgroundColor:GOLD+'33', fill:true,
+    pointBackgroundColor:last20.map(r=>r.ou<=0?GREEN:RED)}]);
+
   // Heatmap
   const months = ['E','F','M','A','My','Jn','Jl','Ag','S','O','N','D'];
+  const allYears = [...new Set(DATA.map(r=>r.y))].sort().reverse();
   const hdata = {};
-  DATA.forEach(r => {
-    if (!hdata[r.y]) hdata[r.y] = Array(12).fill(0);
-    hdata[r.y][r.m-1]++;
-  });
-  let html = '<div class="yr-table">';
-  html += '<div class="yr-cell header yr-label">Año</div>';
-  months.forEach(m => html += `<div class="yr-cell header">${m}</div>`);
-  years.slice().reverse().forEach(y => {
-    html += `<div class="yr-cell yr-label">${y}</div>`;
+  DATA.forEach(r=>{ if(!hdata[r.y])hdata[r.y]=Array(12).fill(0); hdata[r.y][r.m-1]++; });
+  let hm = '<div class="yr-table"><div class="yr-cell header yr-label">Año</div>';
+  months.forEach(m => hm += `<div class="yr-cell header">${m}</div>`);
+  allYears.forEach(y => {
+    hm += `<div class="yr-cell yr-label">${y}</div>`;
     (hdata[y]||Array(12).fill(0)).forEach(v => {
-      let cls = v === 0 ? '' : v <= 2 ? 'heat-low' : v <= 5 ? 'heat-mid' : 'heat-high';
-      html += `<div class="yr-cell ${cls}">${v||''}</div>`;
+      const cls = v===0?'':v<=2?'heat-low':v<=5?'heat-mid':'heat-high';
+      hm += `<div class="yr-cell ${cls}">${v||''}</div>`;
     });
   });
-  html += '</div>';
-  document.getElementById('heatmap').innerHTML = html;
+  hm += '</div>';
+  document.getElementById('heatmap').innerHTML = hm;
 }
 
-// ── ROUNDS PAGE ───────────────────────────────────────────────────
+// ── VUELTAS ───────────────────────────────────────────────────────
 let roundsSort = {col:'date', asc:false};
-
 function sortRounds(col) {
-  if (roundsSort.col === col) roundsSort.asc = !roundsSort.asc;
-  else { roundsSort.col = col; roundsSort.asc = false; }
+  if(roundsSort.col===col) roundsSort.asc=!roundsSort.asc; else {roundsSort.col=col;roundsSort.asc=false;}
   renderRounds();
 }
-
 function renderRounds() {
-  const pais = document.getElementById('f-pais').value;
-  const year = document.getElementById('f-year').value;
-  const holes = document.getElementById('f-holes').value;
+  const pais   = document.getElementById('f-pais').value;
+  const year   = document.getElementById('f-year').value;
+  const holes  = document.getElementById('f-holes').value;
   const course = document.getElementById('f-course').value.toLowerCase();
-  
   let rows = DATA.filter(r => {
-    if (pais && r.pais !== pais) return false;
-    if (year && r.y != year) return false;
-    if (holes === '18' && r.holes < 17) return false;
-    if (holes === '9' && r.holes !== 9) return false;
+    if (pais   && r.pais !== pais) return false;
+    if (year   && r.y != year) return false;
+    if (holes==='18' && r.holes<17) return false;
+    if (holes==='9'  && r.holes!==9) return false;
     if (course && !r.course.toLowerCase().includes(course)) return false;
     return true;
   });
-  
-  const {col, asc} = roundsSort;
+  const {col,asc} = roundsSort;
   rows.sort((a,b) => {
-    let va = a[col], vb = b[col];
-    if (typeof va === 'string') return asc ? va.localeCompare(vb) : vb.localeCompare(va);
-    return asc ? (va||0)-(vb||0) : (vb||0)-(va||0);
+    let va=a[col],vb=b[col];
+    if(typeof va==='string') return asc?va.localeCompare(vb):vb.localeCompare(va);
+    return asc?(va||0)-(vb||0):(vb||0)-(va||0);
   });
-  
-  document.getElementById('rounds-count').textContent = 
-    rows.length + ' vueltas';
-  
-  const tbody = document.getElementById('rounds-tbody');
-  tbody.innerHTML = rows.map(r => {
-    const girPct = r.girT > 0 ? Math.round(r.gir/r.girT*100) : null;
-    const fwPct = r.fwT > 0 ? Math.round(r.fwH/r.fwT*100) : null;
-    const ouC = ouColor(r.ou);
-    const isExcl = EXCLUDED_IDS.has(r.id);
-      return `<tr onclick="showRoundDetail(${r.id})" style="cursor:pointer" class="${isExcl?'excluded-row':''}">
-      <td>${r.pais||'—'}</td>
-      <td>${r.date}</td>
-      <td>${r.course}${r.src==='xls'?' <span style="color:var(--muted);font-size:10px">XLS</span>':''}</td>
-      <td>${r.holes}</td>
-      <td>${r.shots||'—'}</td>
-      <td class="${ouC}">${r.ou!=null?ouFmt(r.ou):'—'}</td>
-      <td>${r.putts||'—'}</td>
-      <td>${girPct!=null?girPct+'%':'—'}</td>
-      <td>${fwPct!=null?fwPct+'%':'—'}</td>
-      <td onclick="event.stopPropagation()">
-        <button class="btn-excl ${isExcl?'excluded':''}"
-          onclick="toggleExclusion(${r.id})"
-          title="${isExcl?'Incluir en estadísticas':'Excluir de estadísticas (scramble, match play...)'}">
-          ${isExcl?'✓ excl':'⊘'}
-        </button>
-      </td>
-    </tr>\``;
+  document.getElementById('rounds-count').textContent = rows.length + ' vueltas';
+  document.getElementById('rounds-tbody').innerHTML = rows.map(r => {
+    const girPct = r.girT>0 ? Math.round(r.gir/r.girT*100) : null;
+    const fwPct  = r.fwT>0  ? Math.round(r.fwH/r.fwT*100)  : null;
+    const excl   = EXCLUDED_IDS.has(r.id);
+    return `<tr onclick="showRoundDetail(${r.id})" style="cursor:pointer" class="${excl?'excluded-row':''}">
+      <td>${r.pais||'—'}</td><td>${r.date}</td><td>${r.course}${r.src==='xls'?' <span style="color:var(--muted);font-size:10px">XLS</span>':''}</td>
+      <td>${r.holes}</td><td>${r.shots||'—'}</td>
+      <td class="${ouColor(r.ou)}">${r.ou!=null?ouFmt(r.ou):'—'}</td>
+      <td>${r.putts||'—'}</td><td>${girPct!=null?girPct+'%':'—'}</td><td>${fwPct!=null?fwPct+'%':'—'}</td>
+      <td onclick="event.stopPropagation()"><button class="btn-excl ${excl?'excluded':''}" onclick="toggleExclusion(${r.id})" title="${excl?'Incluir':'Excluir (scramble/match play)'}">${excl?'✓':'⊘'}</button></td>
+    </tr>`;
   }).join('');
 }
 
-// ── TRENDS PAGE ───────────────────────────────────────────────────
+// ── TENDENCIAS ────────────────────────────────────────────────────
 let trendsInited = false;
 function initTrends() {
-  if (trendsInited) return;
-  trendsInited = true;
-  
+  if(trendsInited) return; trendsInited=true;
   const yrs = [...new Set(D18.map(r=>r.y))].sort();
-  
-  const byY = {};
-  yrs.forEach(y => byY[y] = D18.filter(r=>r.y===y));
-  
-  // Scoring avg
-  lineChart('t-scoring', yrs, [{
-    label:'S/Par avg', data: yrs.map(y=>+fmt(avg(byY[y].map(r=>r.ou).filter(x=>x!=null)))),
-    borderColor:GOLD, backgroundColor:GOLD+'22', fill:true
-  }]);
-  
-  // GIR
-  lineChart('t-gir', yrs, [{
-    label:'GIR%', data: yrs.map(y => {
-      const rs = byY[y].filter(r=>r.girT>0);
-      return +fmt(avg(rs.map(r=>r.gir/r.girT*100)));
-    }),
-    borderColor:GREEN, backgroundColor:GREEN+'22', fill:true
-  }]);
-  
-  // Putts
-  lineChart('t-putts', yrs, [{
-    label:'Putts avg', data: yrs.map(y=>+fmt(avg(byY[y].filter(r=>r.putts).map(r=>r.putts)))),
-    borderColor:BLUE, backgroundColor:BLUE+'22', fill:true
-  }]);
-  
-  // FW
-  lineChart('t-fw', yrs, [{
-    label:'FW%', data: yrs.map(y => {
-      const rs = byY[y].filter(r=>r.fwT>0);
-      return +fmt(avg(rs.map(r=>r.fwH/r.fwT*100)));
-    }),
-    borderColor:GOLD, backgroundColor:GOLD+'22', fill:true
-  }]);
-  
-  // Count
-  barChart('t-count', yrs, [{
-    data: yrs.map(y=>byY[y].length),
-    backgroundColor:GREEN+'88'
-  }]);
-  
-  // Monthly avg
-  const months = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-  const byM = Array.from({length:12},(_,i)=>D18.filter(r=>r.m===i+1).map(r=>r.ou).filter(x=>x!=null));
-  lineChart('t-monthly', months, [{
-    label:'S/Par avg por mes',
-    data: byM.map(a=>a.length?+fmt(avg(a)):null),
-    borderColor:GOLD, backgroundColor:GOLD+'22', fill:true,
-    spanGaps:true
-  }]);
+  const byY = y => D18.filter(r=>r.y===y);
+  lineChart('t-scoring', yrs, [{label:'S/Par avg',
+    data:yrs.map(y=>+fmt(avg(byY(y).map(r=>r.ou).filter(x=>x!=null)))),
+    borderColor:GOLD, backgroundColor:GOLD+'22', fill:true}]);
+  lineChart('t-gir', yrs, [{label:'GIR%',
+    data:yrs.map(y=>{const rs=byY(y).filter(r=>r.girT>0);return +fmt(avg(rs.map(r=>r.gir/r.girT*100)));}),
+    borderColor:GREEN, backgroundColor:GREEN+'22', fill:true}]);
+  lineChart('t-putts', yrs, [{label:'Putts avg',
+    data:yrs.map(y=>+fmt(avg(byY(y).filter(r=>r.putts).map(r=>r.putts)))),
+    borderColor:BLUE, backgroundColor:BLUE+'22', fill:true}]);
+  lineChart('t-fw', yrs, [{label:'FW%',
+    data:yrs.map(y=>{const rs=byY(y).filter(r=>r.fwT>0);return +fmt(avg(rs.map(r=>r.fwH/r.fwT*100)));}),
+    borderColor:GOLD, backgroundColor:GOLD+'22', fill:true}]);
+  barChart('t-count', yrs, [{data:yrs.map(y=>byY(y).length), backgroundColor:GREEN+'88'}]);
+  const mons = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  lineChart('t-monthly', mons, [{label:'S/Par avg',
+    data:mons.map((_,i)=>{ const a=D18.filter(r=>r.m===i+1).map(r=>r.ou).filter(x=>x!=null); return a.length?+fmt(avg(a)):null;}),
+    borderColor:GOLD, backgroundColor:GOLD+'22', fill:true, spanGaps:true}]);
 }
 
-// ── COURSES PAGE ──────────────────────────────────────────────────
-let coursesSort = {col:'count', asc:false};
-
+// ── CAMPOS ────────────────────────────────────────────────────────
+let courseData=null;
 function buildCourseData() {
-  const cm = {};
-  D18.forEach(r => {
-    if (!cm[r.course]) cm[r.course] = {course:r.course, rounds:[]};
-    cm[r.course].rounds.push(r);
-  });
-  return Object.values(cm).map(c => {
-    const ous = c.rounds.map(r=>r.ou).filter(x=>x!=null);
-    const girs = c.rounds.filter(r=>r.girT>0).map(r=>r.gir/r.girT*100);
-    const putts = c.rounds.filter(r=>r.putts).map(r=>r.putts);
-    const dates = c.rounds.map(r=>r.date).sort();
-    return {
-      course: c.course,
-      count: c.rounds.length,
-      avgOu: ous.length ? avg(ous) : null,
-      bestOu: ous.length ? Math.min(...ous) : null,
-      avgGir: girs.length ? avg(girs) : null,
-      avgPutts: putts.length ? avg(putts) : null,
-      lastDate: dates[dates.length-1]
-    };
+  const cm={};
+  D18.forEach(r=>{ if(!cm[r.course])cm[r.course]={course:r.course,rounds:[]}; cm[r.course].rounds.push(r); });
+  return Object.values(cm).map(c=>{
+    const ous=c.rounds.map(r=>r.ou).filter(x=>x!=null);
+    const girs=c.rounds.filter(r=>r.girT>0).map(r=>r.gir/r.girT*100);
+    const putts=c.rounds.filter(r=>r.putts).map(r=>r.putts);
+    const dates=c.rounds.map(r=>r.date).sort();
+    return {course:c.course,count:c.rounds.length,
+      avgOu:ous.length?avg(ous):null, bestOu:ous.length?Math.min(...ous):null,
+      avgGir:girs.length?avg(girs):null, avgPutts:putts.length?avg(putts):null,
+      lastDate:dates[dates.length-1]};
   });
 }
-
-let courseData = null;
-
-function initCourses() {
-  if (courseData) return;
-  courseData = buildCourseData();
-  
-  // Top by count
-  const topCount = [...courseData].sort((a,b)=>b.count-a.count).slice(0,15);
-  const maxC = topCount[0].count;
-  document.getElementById('course-bars-count').innerHTML = topCount.map(c=>`
-    <div class="course-bar">
-      <div class="course-bar-label" title="${c.course}">${c.course}</div>
-      <div class="course-bar-track">
-        <div class="course-bar-fill" style="width:${c.count/maxC*100}%"></div>
-      </div>
-      <div class="course-bar-val">${c.count}</div>
-    </div>`).join('');
-  
-  // Best scoring avg (min 3 rounds)
-  const topScore = courseData.filter(c=>c.count>=3&&c.avgOu!=null)
-    .sort((a,b)=>a.avgOu-b.avgOu).slice(0,15);
-  const minS = topScore[topScore.length-1]?.avgOu||20;
-  const maxS = Math.max(...topScore.map(c=>c.avgOu));
-  document.getElementById('course-bars-score').innerHTML = topScore.map(c=>`
-    <div class="course-bar">
-      <div class="course-bar-label" title="${c.course}">${c.course}</div>
-      <div class="course-bar-track">
-        <div class="course-bar-fill" style="width:${(c.avgOu-minS+1)/(maxS-minS+2)*100}%;background:${GREEN}"></div>
-      </div>
-      <div class="course-bar-val ${c.avgOu<0?'ou-neg':''}">${ouFmt(+fmt(c.avgOu))}</div>
-    </div>`).join('');
-  
-  sortCourses('count');
-}
-
+let coursesSort={col:'count',asc:false};
 function sortCourses(col) {
-  if (coursesSort.col === col) coursesSort.asc = !coursesSort.asc;
-  else { coursesSort.col = col; coursesSort.asc = false; }
+  if(coursesSort.col===col)coursesSort.asc=!coursesSort.asc;else{coursesSort.col=col;coursesSort.asc=false;}
   renderCourses();
 }
-
+function initCourses() {
+  if(courseData) return;
+  courseData = buildCourseData();
+  const topCount = [...courseData].sort((a,b)=>b.count-a.count).slice(0,15);
+  const maxC = topCount[0].count;
+  document.getElementById('course-bars-count').innerHTML = topCount.map(c =>
+    `<div class="course-bar"><div class="course-bar-label" title="${c.course}">${c.course}</div>
+     <div class="course-bar-track"><div class="course-bar-fill" style="width:${c.count/maxC*100}%"></div></div>
+     <div class="course-bar-val">${c.count}</div></div>`).join('');
+  const topScore = courseData.filter(c=>c.count>=3&&c.avgOu!=null).sort((a,b)=>a.avgOu-b.avgOu).slice(0,15);
+  const maxS=Math.max(...topScore.map(c=>c.avgOu)), minS=topScore[topScore.length-1]?.avgOu||0;
+  document.getElementById('course-bars-score').innerHTML = topScore.map(c =>
+    `<div class="course-bar"><div class="course-bar-label" title="${c.course}">${c.course}</div>
+     <div class="course-bar-track"><div class="course-bar-fill" style="width:${(c.avgOu-minS+1)/(maxS-minS+2)*100}%;background:${GREEN}"></div></div>
+     <div class="course-bar-val ${c.avgOu<0?'ou-neg':''}">${ouFmt(+fmt(c.avgOu))}</div></div>`).join('');
+  sortCourses('count');
+}
 function renderCourses() {
-  const {col, asc} = coursesSort;
-  const rows = [...courseData].sort((a,b) => {
-    let va = a[col], vb = b[col];
-    if (va == null) return 1; if (vb == null) return -1;
-    if (typeof va === 'string') return asc ? va.localeCompare(vb) : vb.localeCompare(va);
-    return asc ? va-vb : vb-va;
+  const {col,asc}=coursesSort;
+  const rows=[...courseData].sort((a,b)=>{
+    let va=a[col],vb=b[col];
+    if(va==null)return 1;if(vb==null)return -1;
+    if(typeof va==='string')return asc?va.localeCompare(vb):vb.localeCompare(va);
+    return asc?va-vb:vb-va;
   });
-  
-  document.getElementById('courses-tbody').innerHTML = rows.map(c=>`
-    <tr>
-      <td>${c.course}</td>
-      <td>${c.count}</td>
-      <td class="${ouColor(c.avgOu)}">${c.avgOu!=null?ouFmt(+fmt(c.avgOu)):'—'}</td>
-      <td class="${ouColor(c.bestOu)}">${c.bestOu!=null?ouFmt(c.bestOu):'—'}</td>
-      <td>${c.avgGir!=null?fmt(c.avgGir)+'%':'—'}</td>
-      <td>${c.avgPutts!=null?fmt(c.avgPutts):'—'}</td>
-      <td>${c.lastDate||'—'}</td>
-    </tr>`).join('');
+  document.getElementById('courses-tbody').innerHTML = rows.map(c =>
+    `<tr><td>${c.course}</td><td>${c.count}</td>
+     <td class="${ouColor(c.avgOu)}">${c.avgOu!=null?ouFmt(+fmt(c.avgOu)):'—'}</td>
+     <td class="${ouColor(c.bestOu)}">${c.bestOu!=null?ouFmt(c.bestOu):'—'}</td>
+     <td>${c.avgGir!=null?fmt(c.avgGir)+'%':'—'}</td>
+     <td>${c.avgPutts!=null?fmt(c.avgPutts):'—'}</td>
+     <td>${c.lastDate||'—'}</td></tr>`).join('');
 }
 
 // ── PERSONAL BESTS ────────────────────────────────────────────────
 function initBests() {
-  const ou18 = D18.map(r=>r.ou).filter(x=>x!=null);
-  const shots18 = D18.filter(r=>r.shots);
-  const putts18 = D18.filter(r=>r.putts);
-  const gir18 = D18.filter(r=>r.girT>0);
-  
-  const bestScore = D18.filter(r=>r.ou!=null).sort((a,b)=>a.ou-b.ou)[0];
-  const worstScore = D18.filter(r=>r.ou!=null).sort((a,b)=>b.ou-a.ou)[0];
-  const bestPutts = putts18.sort((a,b)=>a.putts-b.putts)[0];
-  const worstPutts = putts18.sort((a,b)=>b.putts-a.putts)[0];
-  const bestGir = gir18.sort((a,b)=>b.gir-a.gir)[0];
-  const bestFw = D18.filter(r=>r.fwT>0).sort((a,b)=>b.fwH/b.fwT-a.fwH/a.fwT)[0];
-  const longestStreak = getLongestStreak();
-  const totalEagles = countSpecial();
-  const bestMonth = getBestMonth();
-  
-  const bests = [
-    {icon:'🏆', label:'Mejor vuelta', val:ouFmt(bestScore?.ou), detail:bestScore?.course?.substring(0,25)+' · '+bestScore?.date},
-    {icon:'⛳', label:'Mejor GIR', val:bestGir?.gir+'/'+bestGir?.girT, detail:Math.round(bestGir?.gir/bestGir?.girT*100)+'% · '+bestGir?.course?.substring(0,20)},
-    {icon:'🎯', label:'Mejor putting', val:bestPutts?.putts+' putts', detail:bestPutts?.course?.substring(0,25)+' · '+bestPutts?.date},
-    {icon:'📏', label:'Más fairways', val:bestFw?.fwH+'/'+bestFw?.fwT, detail:Math.round(bestFw?.fwH/bestFw?.fwT*100)+'% · '+bestFw?.course?.substring(0,20)},
-    {icon:'📅', label:'Mejor mes', val:bestMonth.label, detail:'S/Par avg: '+ouFmt(+fmt(bestMonth.avg))},
-    {icon:'🔥', label:'Racha sub-par', val:longestStreak.len+' vueltas', detail:longestStreak.start+' – '+longestStreak.end},
-    {icon:'⬇', label:'Total sub-par', val:ou18.filter(v=>v<=0).length, detail:'de '+D18.length+' vueltas completas'},
-    {icon:'🌍', label:'Campos jugados', val:[...new Set(DATA.map(r=>r.cid))].length, detail:'Diferentes campos'},
-    {icon:'📊', label:'Vueltas totales', val:D18.length, detail:'Vueltas de 18H completas'},
-    {icon:'⚡', label:'Bajo el par', val:ou18.filter(v=>v<0).length, detail:'Vueltas por debajo del par'},
+  const ou18   = D18.map(r=>r.ou).filter(x=>x!=null);
+  const putts  = D18.filter(r=>r.putts);
+  const girs   = D18.filter(r=>r.girT>0);
+  const fws    = D18.filter(r=>r.fwT>0);
+  const best   = D18.filter(r=>r.ou!=null).sort((a,b)=>a.ou-b.ou)[0]||{};
+  const bPutts = putts.sort((a,b)=>a.putts-b.putts)[0]||{};
+  const bGir   = girs.sort((a,b)=>b.gir-a.gir)[0]||{};
+  const bFw    = fws.sort((a,b)=>b.fwH/b.fwT-a.fwH/a.fwT)[0]||{};
+  const streak = getLongestStreak();
+  const bMonth = getBestMonth();
+  const bests  = [
+    {icon:'🏆',label:'Mejor vuelta',      val:ouFmt(best.ou),           detail:(best.course||'').substring(0,25)+' · '+(best.date||'')},
+    {icon:'⛳',label:'Mejor GIR',          val:(bGir.gir||0)+'/'+(bGir.girT||0), detail:Math.round((bGir.gir||0)/(bGir.girT||1)*100)+'% · '+(bGir.course||'').substring(0,20)},
+    {icon:'🎯',label:'Mejor putting',      val:(bPutts.putts||'—')+' putts', detail:(bPutts.course||'').substring(0,25)+' · '+(bPutts.date||'')},
+    {icon:'📏',label:'Más fairways',       val:(bFw.fwH||0)+'/'+(bFw.fwT||0), detail:Math.round((bFw.fwH||0)/(bFw.fwT||1)*100)+'%'},
+    {icon:'📅',label:'Mejor mes',          val:bMonth.label,             detail:'S/Par avg: '+ouFmt(+fmt(bMonth.avg))},
+    {icon:'🔥',label:'Racha sub-par',      val:streak.len+' vueltas',    detail:streak.start+' – '+streak.end},
+    {icon:'⬇', label:'Total sub-par',      val:ou18.filter(v=>v<=0).length, detail:'de '+D18.length+' vueltas'},
+    {icon:'🌍',label:'Campos jugados',     val:[...new Set(DATA.map(r=>r.cid).filter(Boolean))].length, detail:'Diferentes campos'},
+    {icon:'📊',label:'Vueltas completas',  val:D18.length,               detail:'Vueltas de 18H'},
+    {icon:'⚡',label:'Bajo el par',        val:ou18.filter(v=>v<0).length, detail:'Vueltas por debajo del par'},
   ];
-  
-  document.getElementById('bests-grid').innerHTML = bests.map(b=>`
-    <div class="best-card">
-      <div class="best-icon">${b.icon}</div>
-      <div class="best-label">${b.label}</div>
-      <div class="best-val">${b.val}</div>
-      <div class="best-detail">${b.detail}</div>
-    </div>`).join('');
-  
-  // Top 20 rounds
+  document.getElementById('bests-grid').innerHTML = bests.map(b =>
+    `<div class="best-card"><div class="best-icon">${b.icon}</div><div class="best-label">${b.label}</div>
+     <div class="best-val">${b.val}</div><div class="best-detail">${b.detail}</div></div>`).join('');
   const top20 = [...D18].filter(r=>r.ou!=null).sort((a,b)=>a.ou-b.ou).slice(0,20);
-  document.getElementById('top-rounds-tbody').innerHTML = top20.map((r,i)=>`
-    <tr>
-      <td style="color:var(--gold)">${i+1}</td>
-      <td>${r.pais||'—'}</td>
-      <td>${r.date}</td>
-      <td>${r.course}${r.src==='xls'?' <span style="color:var(--muted);font-size:10px">XLS</span>':''}</td>
-      <td>${r.shots||'—'}</td>
-      <td class="${ouColor(r.ou)}">${ouFmt(r.ou)}</td>
-      <td>${r.girT>0?Math.round(r.gir/r.girT*100)+'%':'—'}</td>
-      <td>${r.putts||'—'}</td>
-    </tr>`).join('');
-    
-  // Eagles section - se actualizará con datos de hoyos cuando estén disponibles
+  document.getElementById('top-rounds-tbody').innerHTML = top20.map((r,i) =>
+    `<tr><td style="color:var(--gold2)">${i+1}</td><td>${r.date}</td><td>${r.course}</td>
+     <td>${r.shots||'—'}</td><td class="${ouColor(r.ou)}">${ouFmt(r.ou)}</td>
+     <td>${r.girT>0?Math.round(r.gir/r.girT*100)+'%':'—'}</td><td>${r.putts||'—'}</td></tr>`).join('');
   const eagleRounds = D18.filter(r=>r.ou<=-5).sort((a,b)=>a.date.localeCompare(b.date));
-  const eagleHtml = eagleRounds.length > 0
+  document.getElementById('eagles-list').innerHTML = eagleRounds.length
     ? eagleRounds.map(r => {
-        // Si tenemos datos de hoyos, mostrar hoyo/par; si no, mostrar placeholder
-        const holeData = HOLES_DATA[r.id];
-        let detail = '';
-        if (holeData) {
-          // Buscar hoyos con eagle o mejor (shots <= par-2)
-          // Se calculará cuando tengamos datos de hoyos
-          detail = holeData.filter(h=>h.s<=h.p-2).map(h=>`Hoyo ${h.h} (Par ${h.p})`).join(', ');
-        }
-        return `<div style="margin:6px 0; padding:6px 0; border-bottom:1px solid var(--border)">
-          <span style="color:var(--gold)">${r.date}</span> · 
-          <span>${r.course}</span>
-          ${detail ? ' · <span style="color:var(--green2)">'+detail+'</span>' : ''}
-        </div>`;
+        const hd = HOLES_DATA[r.id];
+        const detail = hd ? hd.filter(h=>h.s<=h.par-2).map(h=>`Hoyo ${h.h} (Par ${h.par})`).join(', ') : '';
+        return `<div style="margin:6px 0;padding:6px 0;border-bottom:1px solid var(--border)"><span style="color:var(--gold2)">${r.date}</span> · <span>${r.course}</span>${detail?' · <span style="color:'+GREEN+'">'+detail+'</span>':''}  </div>`;
       }).join('')
-    : '<div style="color:var(--muted)">Sin datos de vueltas muy por debajo del par</div>';
-  document.getElementById('eagles-list').innerHTML = eagleHtml;
+    : '<div style="color:var(--muted)">Sin vueltas muy por debajo del par</div>';
 }
-
 function getLongestStreak() {
-  const sorted = [...D18].filter(r=>r.ou!=null).sort((a,b)=>a.date.localeCompare(b.date));
-  let best = {len:0, start:'', end:''};
-  let cur = 0, curStart = '';
-  sorted.forEach((r,i) => {
-    if (r.ou <= 0) {
-      if (cur === 0) curStart = r.date;
-      cur++;
-      if (cur > best.len) best = {len:cur, start:curStart, end:r.date};
-    } else {
-      cur = 0;
-    }
-  });
+  const sorted=[...D18].filter(r=>r.ou!=null).sort((a,b)=>a.date.localeCompare(b.date));
+  let best={len:0,start:'',end:''},cur=0,curStart='';
+  sorted.forEach(r=>{ if(r.ou<=0){if(cur===0)curStart=r.date;cur++;if(cur>best.len)best={len:cur,start:curStart,end:r.date};}else cur=0;});
   return best;
 }
-
 function getBestMonth() {
-  const months = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-  const byM = months.map((m,i) => ({
-    label:m,
-    avg: avg(D18.filter(r=>r.m===i+1).map(r=>r.ou).filter(x=>x!=null))
-  })).filter(m=>m.avg!=null);
-  return byM.sort((a,b)=>a.avg-b.avg)[0] || {label:'—', avg:0};
+  const mons=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  const byM = mons.map((m,i)=>({label:m,avg:avg(D18.filter(r=>r.m===i+1).map(r=>r.ou).filter(x=>x!=null))})).filter(m=>m.avg!=null);
+  return byM.sort((a,b)=>a.avg-b.avg)[0]||{label:'—',avg:0};
 }
 
-function countSpecial() {
-  return D18.filter(r=>r.ou<=-4).length;
-}
-
-
-// ── DETALLE DE VUELTA ─────────────────────────────────────────────
+// ── DETALLE VUELTA ────────────────────────────────────────────────
 let _prevPage = 'rounds';
-
 function showRoundDetail(roundId) {
-  const r = DATA.find(x => x.id === roundId);
-  if (!r) return;
-  _prevPage = document.querySelector('.nav-link.active')?.dataset?.page || 'rounds';
-  
+  const r = DATA.find(x => x.id===roundId); if (!r) return;
+  _prevPage = document.querySelector('.nav-link.active')?.dataset?.page||'rounds';
   document.getElementById('detail-title').textContent = r.course;
-  document.getElementById('detail-sub').textContent = 
-    r.date + ' · ' + r.holes + ' hoyos · ' + (r.pais||'');
-  
-  // KPIs
-  const girPct = r.girT > 0 ? Math.round(r.gir/r.girT*100) : null;
-  const fwPct  = r.fwT  > 0 ? Math.round(r.fwH/r.fwT*100)  : null;
+  document.getElementById('detail-sub').textContent = r.date+' · '+r.holes+' hoyos · '+(r.pais||'');
+  const girPct = r.girT>0?Math.round(r.gir/r.girT*100):null;
+  const fwPct  = r.fwT>0?Math.round(r.fwH/r.fwT*100):null;
   document.getElementById('detail-kpis').innerHTML = [
-    {label:'Score', val: r.shots||'—', sub: r.ou!=null?(ouFmt(r.ou)+' S/Par'):''},
-    {label:'Putts', val: r.putts||'—', sub: r.putts&&r.girT?fmt(r.putts/r.girT)+' por hoyo':''},
-    {label:'GIR', val: girPct!=null?(girPct+'%'):'—', sub: r.gir+'/'+r.girT+' greens'},
-    {label:'Fairways', val: fwPct!=null?(fwPct+'%'):'—', sub: r.fwH+'/'+r.fwT+' fairways'},
-  ].map(k=>`<div class="kpi">
-    <div class="kpi-label">${k.label}</div>
-    <div class="kpi-val">${k.val}</div>
-    <div class="kpi-sub">${k.sub}</div>
-  </div>`).join('');
-  
-  // Datos de hoyo a hoyo
+    {label:'Score',    val:r.shots||'—', sub:r.ou!=null?(ouFmt(r.ou)+' S/Par'):''},
+    {label:'Putts',    val:r.putts||'—', sub:r.putts&&r.girT?fmt(r.putts/r.girT)+' por hoyo':''},
+    {label:'GIR',      val:girPct!=null?(girPct+'%'):'—', sub:(r.gir||0)+'/'+(r.girT||0)+' greens'},
+    {label:'Fairways', val:fwPct!=null?(fwPct+'%'):'—',   sub:(r.fwH||0)+'/'+(r.fwT||0)+' fairways'},
+  ].map(k=>`<div class="kpi"><div class="kpi-label">${k.label}</div><div class="kpi-val" style="font-size:28px">${k.val}</div><div class="kpi-sub">${k.sub}</div></div>`).join('');
+
   const holes = HOLES_DATA[roundId];
-  const noHolesEl = document.getElementById('detail-no-holes');
-  const scorecardEl = document.querySelector('.card:has(#detail-scorecard)') ||
-    document.getElementById('detail-scorecard').closest('.card');
-  
-  if (holes && holes.length > 0) {
-    noHolesEl.style.display = 'none';
-
-    // Función para clase CSS según resultado PGA
-    const pgaClass = (s, par) => {
-      if (!par) return '';
-      const d = s - par;
-      if (d <= -2) return 'score-eagle';
-      if (d === -1) return 'score-birdie';
-      if (d ===  0) return 'score-par';
-      if (d ===  1) return 'score-bogey';
-      return 'score-double';
-    };
-    // Color para gráfica
-    const holeColor = (s, par) => {
-      if (!par) return '#c9a84c88';
-      const d = s - par;
-      if (d <= -2) return '#006db3';   // Eagle: azul PGA
-      if (d === -1) return '#e8192c';  // Birdie: rojo PGA
-      if (d ===  0) return '#aaa89a';  // Par: gris medio
-      if (d ===  1) return '#6b5a3e';  // Bogey: marrón
-      return '#3d2810';                // Doble+: marrón oscuro
-    };
-
-    // Actualizar cabecera
+  const noEl  = document.getElementById('detail-no-holes');
+  if (holes && holes.length>0) {
+    noEl.style.display = 'none';
+    const pgaClass = (s,p) => { if(!p)return''; const d=s-p; return d<=-2?'score-eagle':d===-1?'score-birdie':d===0?'score-par':d===1?'score-bogey':'score-double'; };
+    const holeColor = (s,p) => { if(!p)return'#c9a84c88'; const d=s-p; return d<=-2?'#006db3':d===-1?'#e8192c':d===0?'#aaa89a':d===1?'#6b5a3e':'#3d2810'; };
     document.querySelector('#detail-scorecard thead tr').innerHTML =
       '<th>Hoyo</th><th>Par</th><th>Golpes</th><th>Putts</th><th>GIR</th><th>Fairway</th>';
-
-    const tbody = document.getElementById('detail-scorecard-body');
-    tbody.innerHTML = holes.map((h, i) => {
-      const d   = h.par ? h.s - h.par : null;
-      const cls = pgaClass(h.s, h.par);
-      const fw  = h.fw === 1 ? '<span style="color:#2d6a4f">✓</span>'
-                : h.fw === 2 ? '<span style="color:#888">→</span>'
-                : h.fw === 3 ? '<span style="color:#888">←</span>' : '—';
-      const scoreDisplay = cls
-        ? `<span class="${cls}">${h.s}</span>`
-        : `<span>${h.s||'—'}</span>`;
-      return `<tr>
-        <td style="color:#7a6e5a">${h.h || i+1}</td>
-        <td style="color:#7a6e5a">${h.par || '—'}</td>
-        <td>${scoreDisplay}</td>
-        <td>${h.p || '—'}</td>
-        <td>${h.gir ? '<span style="color:#2d6a4f;font-weight:700">✓</span>' : '<span style="color:#bbb">—</span>'}</td>
-        <td>${fw}</td>
-      </tr>`;
+    document.getElementById('detail-scorecard-body').innerHTML = holes.map((h,i) => {
+      const cls = pgaClass(h.s,h.par);
+      const fw  = h.fw===1?'<span style="color:#2d6a4f">✓</span>':h.fw===2?'→':h.fw===3?'←':'—';
+      return `<tr><td style="color:#7a6e5a">${h.h||i+1}</td><td style="color:#7a6e5a">${h.par||'—'}</td>
+        <td>${cls?`<span class="${cls}">${h.s}</span>`:h.s||'—'}</td>
+        <td>${h.p||'—'}</td><td>${h.gir?'<span style="color:#2d6a4f">✓</span>':'—'}</td><td>${fw}</td></tr>`;
     }).join('');
-
-    // Stats por tipo de hoyo y resumen de resultados
-    const byPar = {3:[], 4:[], 5:[]};
-    let eagles=0, birdies=0, pars=0, bogeys=0, doubles=0;
-    holes.forEach(h => {
-      if (h.par && byPar[h.par]) byPar[h.par].push(h);
-      if (!h.par) return;
-      const d = h.s - h.par;
-      if (d <= -2) eagles++;
-      else if (d === -1) birdies++;
-      else if (d === 0) pars++;
-      else if (d === 1) bogeys++;
-      else doubles++;
+    // Stats por par
+    const byPar={3:[],4:[],5:[]}; let eagles=0,birdies=0,pars=0,bogeys=0,doubles=0;
+    holes.forEach(h=>{
+      if(h.par&&byPar[h.par])byPar[h.par].push(h);
+      if(!h.par)return; const d=h.s-h.par;
+      if(d<=-2)eagles++;else if(d===-1)birdies++;else if(d===0)pars++;else if(d===1)bogeys++;else doubles++;
     });
-    const parStat = (p) => {
-      const hs = byPar[p];
-      if (!hs.length) return '<div class="par-stat-box"><div class="pst-title">Par '+p+'</div><div class="pst-par">—</div></div>';
-      const avg = (hs.reduce((a,h)=>a+h.s,0)/hs.length).toFixed(1);
-      const vspar = hs.reduce((a,h)=>a+(h.s-h.par),0);
-      const sign = vspar > 0 ? '+' : '';
-      return `<div class="par-stat-box">
-        <div class="pst-title">Par ${p}</div>
-        <div class="pst-par">${avg}</div>
-        <div class="pst-detail">${hs.length} hoyos · ${sign}${vspar} total</div>
-      </div>`;
+    const ps = p => {
+      const hs=byPar[p]; if(!hs.length)return `<div class="par-stat-box"><div class="pst-title">Par ${p}</div><div class="pst-par">—</div></div>`;
+      const a=(hs.reduce((s,h)=>s+h.s,0)/hs.length).toFixed(1), vp=hs.reduce((s,h)=>s+(h.s-h.par),0);
+      return `<div class="par-stat-box"><div class="pst-title">Par ${p}</div><div class="pst-par">${a}</div><div class="pst-detail">${hs.length} hoyos · ${vp>0?'+':''}${vp} total</div></div>`;
     };
-
-    // Insertar stats tras el scorecard
-    const statsHtml = `
-      <div style="margin-top:16px">
-        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#7a6e5a;margin-bottom:6px">Promedio por tipo de hoyo</div>
-        <div class="par-stats">${parStat(3)}${parStat(4)}${parStat(5)}</div>
-      </div>
-      <div style="margin-top:14px">
-        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#7a6e5a;margin-bottom:8px">Resultados</div>
-        <div class="result-summary">
-          ${eagles   ? `<div class="rs-item"><span class="rs-badge score-eagle" style="border-radius:50%;width:24px;height:24px">${eagles}</span> Eagle${eagles>1?'s':''}</div>` : ''}
-          ${birdies  ? `<div class="rs-item"><span class="rs-badge score-birdie" style="border-radius:50%;width:24px;height:24px">${birdies}</span> Birdie${birdies>1?'s':''}</div>` : ''}
-          ${pars     ? `<div class="rs-item"><span class="rs-badge" style="color:#1a1a1a">${pars}</span> Par${pars>1?'es':''}</div>` : ''}
-          ${bogeys   ? `<div class="rs-item"><span class="rs-badge score-bogey" style="width:24px;height:24px">${bogeys}</span> Bogey${bogeys>1?'s':''}</div>` : ''}
-          ${doubles  ? `<div class="rs-item"><span class="rs-badge score-double" style="width:24px;height:24px">${doubles}</span> Doble+</div>` : ''}
-        </div>
-      </div>`;
-
-    // Añadir stats al final de la tarjeta del scorecard
-    document.getElementById('detail-scorecard').closest('.card').insertAdjacentHTML('beforeend', statsHtml);
-
-    // Gráfica coloreada por resultado
+    const scoreCard = document.getElementById('detail-scorecard').closest('.card');
+    // Eliminar stats anteriores si las hay
+    scoreCard.querySelectorAll('.par-stats-wrap').forEach(el=>el.remove());
+    scoreCard.insertAdjacentHTML('beforeend', `<div class="par-stats-wrap"><div style="margin-top:16px"><div style="font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#7a6e5a;margin-bottom:6px">Promedio por tipo de hoyo</div><div class="par-stats">${ps(3)}${ps(4)}${ps(5)}</div></div><div style="margin-top:14px"><div style="font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#7a6e5a;margin-bottom:8px">Resultados</div><div class="result-summary">${eagles?`<div class="rs-item"><span class="rs-badge score-eagle" style="border-radius:50%;width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center">${eagles}</span> Eagle${eagles>1?'s':''}</div>`:''} ${birdies?`<div class="rs-item"><span class="rs-badge score-birdie" style="border-radius:50%;width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center">${birdies}</span> Birdie${birdies>1?'s':''}</div>`:''} ${pars?`<div class="rs-item"><span style="font-weight:700;color:#1a1a1a">${pars}</span> Par${pars>1?'es':''}</div>`:''} ${bogeys?`<div class="rs-item"><span class="rs-badge score-bogey" style="width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center">${bogeys}</span> Bogey${bogeys>1?'s':''}</div>`:''} ${doubles?`<div class="rs-item"><span class="rs-badge score-double" style="width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center">${doubles}</span> Doble+</div>`:''}</div></div></div>`);
+    // Gráfica
     const ctx = document.getElementById('detail-chart');
-    if (ctx._chart) ctx._chart.destroy();
-    ctx._chart = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: holes.map(h => 'H' + (h.h || '')),
-        datasets: [{
-          label: 'Golpes',
-          data: holes.map(h => h.s),
-          backgroundColor: holes.map(h => holeColor(h.s, h.par)),
-          borderRadius: 3,
-          order: 2,
-        }, {
-          label: 'Par',
-          data: holes.map(h => h.par || null),
-          type: 'line',
-          borderColor: '#8b6914',
-          borderWidth: 2.5,
-          borderDash: [6, 3],
-          pointBackgroundColor: '#8b6914',
-          pointRadius: 4,
-          pointHoverRadius: 6,
-          fill: false,
-          order: 1,
-          tension: 0,
-        }]
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: {
-          legend: { display: true, labels: { color: '#7a8f87', boxWidth: 12 } },
-          tooltip: {
-            callbacks: {
-              label: (ctx) => {
-                const h = holes[ctx.dataIndex];
-                if (!h) return '';
-                const d = h.par ? h.s - h.par : null;
-                const label = d === null ? `${h.s} golpes`
-                  : d <= -2 ? `${h.s} golpes (Eagle!)`
-                  : d === -1 ? `${h.s} golpes (Birdie)`
-                  : d === 0  ? `${h.s} golpes (Par)`
-                  : d === 1  ? `${h.s} golpes (Bogey)`
-                  : `${h.s} golpes (+${d})`;
-                return label;
-              }
-            }
-          }
-        },
-        scales: {
-          x: { grid: { color: '#2a3530' }, ticks: { color: '#7a8f87' } },
-          y: { grid: { color: '#2a3530' }, ticks: { color: '#7a8f87' }, beginAtZero: true }
-        }
-      }
-    });
-  } else {
-    noHolesEl.style.display = 'block';
-    document.getElementById('detail-scorecard-body').innerHTML = '';
-  }
-  
+    if(ctx._ch)ctx._ch.destroy();
+    ctx._ch = new Chart(ctx, {type:'bar', data:{
+      labels:holes.map(h=>'H'+(h.h||'')),
+      datasets:[
+        {label:'Golpes',data:holes.map(h=>h.s),backgroundColor:holes.map(h=>holeColor(h.s,h.par)),borderRadius:3,order:2},
+        {label:'Par',data:holes.map(h=>h.par||null),type:'line',borderColor:'#8b6914',borderWidth:2.5,
+         borderDash:[6,3],pointBackgroundColor:'#8b6914',pointRadius:4,fill:false,order:1,tension:0}
+      ]
+    }, options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:true,labels:{color:'#6b6454',boxWidth:12}},
+        tooltip:{callbacks:{label:(ctx)=>{const h=holes[ctx.dataIndex];if(!h)return'';const d=h.par?h.s-h.par:null;
+          return d===null?h.s+' golpes':d<=-2?h.s+' (Eagle!)':d===-1?h.s+' (Birdie)':d===0?h.s+' (Par)':d===1?h.s+' (Bogey)':h.s+' (+'+d+')';}}}},
+      scales:{x:{grid:{color:'#d4cbb8'},ticks:{color:'#6b6454'}},y:{grid:{color:'#d4cbb8'},ticks:{color:'#6b6454'},beginAtZero:true}}}});
+  } else { noEl.style.display='block'; }
   showPage('detail', document.getElementById('nav-detail'));
-  document.getElementById('nav-detail').style.display = 'flex';
+  document.getElementById('nav-detail').style.display='flex';
 }
-
 function goBackFromDetail() {
-  document.getElementById('nav-detail').style.display = 'none';
-  const prevLink = document.querySelector(`.nav-link[onclick*="${_prevPage}"]`);
-  showPage(_prevPage, prevLink);
+  document.getElementById('nav-detail').style.display='none';
+  showPage(_prevPage, document.querySelector(`.nav-link[onclick*="${_prevPage}"]`));
 }
 
-// ── NAVIGATION ────────────────────────────────────────────────────
-
-function syncBottomNav(activeEl) {
-  document.querySelectorAll('.bottom-nav-item').forEach(el => el.classList.remove('active'));
-  if (activeEl) activeEl.classList.add('active');
+// ── NAVEGACIÓN ────────────────────────────────────────────────────
+function syncBottomNav(el) {
+  document.querySelectorAll('.bottom-nav-item').forEach(e=>e.classList.remove('active'));
+  if(el)el.classList.add('active');
 }
-
 function showPage(name, el) {
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.nav-link').forEach(l=>l.classList.remove('active'));
-  document.querySelectorAll('.bottom-nav-item').forEach(l=>l.classList.remove('active'));
+  document.querySelectorAll('.nav-link,.bottom-nav-item').forEach(l=>l.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
-  if (el) el.classList.add('active');
-  
-  if (name === 'rounds') renderRounds();
-  if (name === 'trends') initTrends();
-  if (name === 'courses') initCourses();
-  if (name === 'bests') initBests();
+  if(el)el.classList.add('active');
+  if(name==='rounds')   renderRounds();
+  if(name==='trends')   initTrends();
+  if(name==='courses')  initCourses();
+  if(name==='bests')    initBests();
 }
 
-// Init
-initResumen();
+// ── INIT ──────────────────────────────────────────────────────────
+async function init() {
+  const loadDiv = document.createElement('div');
+  loadDiv.id = 'loading';
+  loadDiv.style.cssText = 'position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg);z-index:9999;font-size:24px;color:var(--muted);font-family:Cormorant Garamond,serif';
+  loadDiv.textContent = 'Cargando datos...';
+  document.body.appendChild(loadDiv);
+
+  try {
+    const [rRes, cRes] = await Promise.all([
+      fetch('data/rounds.json'),
+      fetch('data/campos.json'),
+    ]);
+    const rawRounds = await rRes.json();
+    CAMPOS_PAIS = await cRes.json();
+
+    // Intentar cargar holes y excluded (opcionales)
+    try { HOLES_DATA = await (await fetch('data/holes.json')).json(); } catch(e) {}
+    try { const excl = await (await fetch('data/excluded.json')).json(); excl.forEach(id=>EXCLUDED_IDS.add(id)); } catch(e) {}
+
+    DATA = mergeRounds(rawRounds).sort((a,b)=>b.date.localeCompare(a.date));
+    loadExclusions();
+    rebuildD18();
+
+    // Poblar filtros
+    const years = [...new Set(DATA.map(r=>r.y))].sort();
+    const ySel  = document.getElementById('f-year');
+    const pSel  = document.getElementById('f-pais');
+    years.forEach(y => ySel.innerHTML += `<option value="${y}">${y}</option>`);
+    [...new Set(DATA.map(r=>r.pais).filter(Boolean))].sort().forEach(p => pSel.innerHTML += `<option value="${p}">${p}</option>`);
+
+    document.getElementById('data-date').textContent = 'Actualizado: ' + DATA[0].date;
+    updateExclBar();
+    initResumen();
+  } catch(e) {
+    loadDiv.textContent = 'Error cargando datos: ' + e;
+    console.error(e);
+    return;
+  }
+  loadDiv.remove();
+}
+
+init();
+
 </script>
 </body>
 </html>
