@@ -558,23 +558,24 @@ const EXCLUDED_IDS = new Set([
 // ── CARGA ASÍNCRONA DE DATOS ──────────────────────────────────────
 // Datos en /data/ — el HTML no necesita actualizarse al jugar
 async function _loadAll() {
-  document.body.insertAdjacentHTML('beforeend',
-    '<div id="loading" style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg);z-index:9999;font-family:'Cormorant Garamond',serif;font-size:24px;color:var(--muted)">Cargando datos...</div>');
-  
+  const loadDiv = document.createElement('div');
+  loadDiv.id = 'loading';
+  loadDiv.style.cssText = 'position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg);z-index:9999;font-size:24px;color:var(--muted)';
+  loadDiv.textContent = 'Cargando datos...';
+  document.body.appendChild(loadDiv);
+
   const [rRes, hRes, cRes] = await Promise.all([
     fetch('data/rounds.json'),
-    fetch('data/holes.json').catch(()=>({ok:false,json:()=>({})})),
+    fetch('data/holes.json').catch(() => ({ok:false, json:()=>({})})),
     fetch('data/campos.json'),
   ]);
-  
-  window.RAW    = await rRes.json();
-  window.LEGACY = [];  // ya incluido en rounds.json
+
+  window.RAW          = await rRes.json();
+  window.LEGACY       = [];
   window.HOLES_DATA   = hRes.ok ? await hRes.json() : {};
   window.CAMPOS_PAIS  = await cRes.json();
-  
-  document.getElementById('loading').remove();
-}
 
+  document.getElementById('loading').remove();
 _loadAll().then(() => {
 
 // ── GESTIÓN DE EXCLUSIONES ────────────────────────────────────
