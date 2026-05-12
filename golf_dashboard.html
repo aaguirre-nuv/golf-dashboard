@@ -1181,10 +1181,8 @@ function loadCampo(courseName) {
     return;
   }
 
-  const rondas = D18.filter(r => r.course === courseName && !r.src)
-    .sort((a,b) => b.date.localeCompare(a.date));
+  const rondas  = D18.filter(r => r.course===courseName && !r.src).sort((a,b)=>b.date.localeCompare(a.date));
   const rondasH = rondas.filter(r => HOLES_DATA[r.id]);
-
   if (!rondas.length) {
     content.innerHTML = '<div class="campo-placeholder"><div class="ph-icon">📊</div><p>Sin vueltas registradas</p></div>';
     return;
@@ -1201,39 +1199,34 @@ function loadCampo(courseName) {
   const back  = hNums.filter(h=>h>9);
 
   // Stats por hoyo
-  const hs = {}; 
-  hNums.forEach(h => { hs[h]={shots:[],eagles:0,birdies:0,pars:0,bogeys:0,doubles:0,triples:0}; });
-  rondasH.forEach(r => {
-    (HOLES_DATA[r.id]||[]).forEach(h => {
+  const hs = {};
+  hNums.forEach(h=>{ hs[h]={shots:[],eagles:0,birdies:0,pars:0,bogeys:0,doubles:0,triples:0}; });
+  rondasH.forEach(r=>{
+    (HOLES_DATA[r.id]||[]).forEach(h=>{
       if(!hs[h.h]||!h.s) return;
       hs[h.h].shots.push(h.s);
       const p=parByHole[h.h]; if(!p) return;
       const d=h.s-p;
-      if(d<=-2)hs[h.h].eagles++;
-      else if(d===-1)hs[h.h].birdies++;
-      else if(d===0)hs[h.h].pars++;
-      else if(d===1)hs[h.h].bogeys++;
-      else if(d===2)hs[h.h].doubles++;
-      else hs[h.h].triples++;
+      if(d<=-2)hs[h.h].eagles++; else if(d===-1)hs[h.h].birdies++;
+      else if(d===0)hs[h.h].pars++; else if(d===1)hs[h.h].bogeys++;
+      else if(d===2)hs[h.h].doubles++; else hs[h.h].triples++;
     });
   });
 
   const avg1 = a => a.length?(a.reduce((x,y)=>x+y,0)/a.length).toFixed(1):'—';
   const min1 = a => a.length?Math.min(...a):'—';
   const sumP = arr => arr.reduce((s,h)=>s+(parByHole[h]||0),0);
-
-  // Colores PGA para celdas
-  const cellStyle = (s,p) => {
+  const cellSt = (s,p) => {
     if(!p||!s) return '';
     const d=s-p;
     if(d<=-2) return 'background:#006db3;color:#fff;border-radius:50%';
     if(d===-1) return 'background:#e8192c;color:#fff;border-radius:50%';
-    if(d===0)  return 'color:#1a1a1a';
+    if(d===0)  return 'color:#555';
     if(d===1)  return 'background:#1a1a1a;color:#fff';
-    return 'background:#1a1a1a;color:#fff;outline:2px solid #1a1a1a;outline-offset:2px';
+    return 'background:#1a1a1a;color:#fff;outline:2px solid #555;outline-offset:1px';
   };
 
-  // KPIs + tabla de años
+  // KPIs y año
   const ous   = rondas.map(r=>r.ou).filter(x=>x!=null);
   const avgOu = ous.length?(ous.reduce((a,b)=>a+b,0)/ous.length).toFixed(1):'—';
   const bestOu= ous.length?Math.min(...ous):'—';
@@ -1241,149 +1234,163 @@ function loadCampo(courseName) {
   const byYear= {};
   rondas.forEach(r=>{if(!byYear[r.y])byYear[r.y]={n:0,ous:[]};byYear[r.y].n++;if(r.ou!=null)byYear[r.y].ous.push(r.ou);});
   const years = Object.keys(byYear).sort();
-  const yearRow1 = years.map(y=>`<td>${byYear[y].n}</td>`).join('');
-  const yearRow2 = years.map(y=>{const o=byYear[y].ous;return `<td>${o.length?(o.reduce((a,b)=>a+b,0)/o.length).toFixed(1):'—'}</td>`;}).join('');
 
   // Par groups
   const pg={3:[],4:[],5:[]};
   rondasH.forEach(r=>{(HOLES_DATA[r.id]||[]).forEach(h=>{if(h.par&&pg[h.par]&&h.s)pg[h.par].push(h.s);});});
 
+  const hasHoles = rondasH.length > 0 && hNums.length > 0;
+
   content.innerHTML = `
-    <!-- KPIs + años -->
-    <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:20px;align-items:flex-start">
-      <div class="kpi-grid" style="flex:1;min-width:240px;margin:0">
+    <!-- FILA 1: KPIs + tabla por años -->
+    <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px;align-items:flex-start">
+      <div style="display:flex;gap:12px;flex-wrap:wrap;flex:0 0 auto">
         <div class="kpi"><div class="kpi-label">Vueltas</div><div class="kpi-val">${rondas.length}</div><div class="kpi-sub">${rondasH.length} con scorecard</div></div>
-        <div class="kpi"><div class="kpi-label">Prom. S/Par</div><div class="kpi-val">${parseFloat(avgOu)>0?'+':''}${avgOu}</div><div class="kpi-sub">scoring avg</div></div>
-        <div class="kpi"><div class="kpi-label">Mejor</div><div class="kpi-val">${bestOu>0?'+':''}${bestOu}</div><div class="kpi-sub">${bestR?.date||''}</div></div>
+        <div class="kpi"><div class="kpi-label">Prom. S/Par</div><div class="kpi-val" style="color:${parseFloat(avgOu)<=0?'var(--green2)':'var(--red)'}">${parseFloat(avgOu)>0?'+':''}${avgOu}</div><div class="kpi-sub">scoring avg</div></div>
+        <div class="kpi"><div class="kpi-label">Mejor</div><div class="kpi-val" class="${ouColor(bestOu)}">${bestOu>0?'+':''}${bestOu}</div><div class="kpi-sub">${bestR?.date||''}</div></div>
       </div>
-      <div class="card" style="flex:2;min-width:280px;padding:14px">
-        <table style="width:100%;font-size:12px;border-collapse:collapse">
-          <tr><td style="color:var(--muted);font-size:10px;padding:3px 6px"></td>${years.map(y=>`<th style="padding:3px 8px;color:var(--muted);font-size:10px;text-align:center">${y}</th>`).join('')}<th style="padding:3px 8px;color:var(--gold2);font-size:10px">Total</th></tr>
-          <tr><td style="color:var(--muted);font-size:11px;padding:3px 6px"># Vueltas</td>${yearRow1}<td style="font-weight:700;text-align:center;padding:3px 8px">${rondas.length}</td></tr>
-          <tr><td style="color:var(--muted);font-size:11px;padding:3px 6px">S/Par avg</td>${yearRow2}<td style="font-weight:700;text-align:center;padding:3px 8px">${parseFloat(avgOu)>0?'+':''}${avgOu}</td></tr>
-        </table>
+      <div class="card" style="flex:1;min-width:260px;padding:14px">
+        <div style="overflow-x:auto"><table style="width:100%;font-size:12px;border-collapse:collapse;white-space:nowrap">
+          <tr><td></td>${years.map(y=>`<th style="padding:4px 10px;color:var(--muted);font-size:11px;text-align:center">${y}</th>`).join('')}<th style="padding:4px 10px;color:var(--gold2);font-size:11px">Total</th></tr>
+          <tr><td style="color:var(--muted);font-size:11px;padding:4px 6px"># Vueltas</td>${years.map(y=>`<td style="text-align:center;padding:4px 10px">${byYear[y].n}</td>`).join('')}<td style="font-weight:700;text-align:center;padding:4px 10px">${rondas.length}</td></tr>
+          <tr><td style="color:var(--muted);font-size:11px;padding:4px 6px">S/Par avg</td>${years.map(y=>{const o=byYear[y].ous;const v=o.length?(o.reduce((a,b)=>a+b,0)/o.length).toFixed(1):'—';return `<td style="text-align:center;padding:4px 10px;color:${parseFloat(v)<=0?'var(--green2)':'var(--red)'}">${parseFloat(v)>0?'+':''}${v}</td>`;}).join('')}<td style="font-weight:700;text-align:center;padding:4px 10px;color:${parseFloat(avgOu)<=0?'var(--green2)':'var(--red)'}">${parseFloat(avgOu)>0?'+':''}${avgOu}</td></tr>
+        </table></div>
       </div>
     </div>
 
-    <!-- Layout principal: tabla vueltas | stats por hoyo -->
-    ${rondasH.length ? `
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
-
-      <!-- Tabla de vueltas con scorecard siempre visible -->
+    ${hasHoles ? `
+    <!-- FILA 2: Stats por hoyo + promedio por tipo -->
+    <div style="display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:16px">
       <div class="card" style="padding:0;overflow:hidden">
-        <div style="padding:12px 16px;border-bottom:1px solid var(--border)"><h3 style="margin:0">Scorecard por vuelta</h3></div>
-        <div class="scorecard-wrap">
-        <table class="scorecard-tbl" style="font-size:11px">
-          <thead>
-            <tr>
-              <th class="row-label" style="min-width:90px">Fecha</th>
-              ${hNums.map(h=>`<th>${h}</th>`).join('')}
-              <th class="col-subtotal">Out</th>
-              <th class="col-total">In</th>
-              <th class="col-total" style="background:#d4cbb8">Tot</th>
-            </tr>
-            <tr class="row-par">
-              <td class="row-label" style="font-size:10px">Par</td>
-              ${hNums.map(h=>`<td>${parByHole[h]||'—'}</td>`).join('')}
-              <td class="col-subtotal">${sumP(front)}</td>
-              <td class="col-total">${sumP(back)}</td>
-              <td class="col-total" style="background:#c8bda0">${sumP(hNums)}</td>
-            </tr>
-          </thead>
+        <div style="padding:10px 16px;border-bottom:1px solid var(--border);font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--gold2)">Estadísticas por hoyo</div>
+        <div class="scorecard-wrap"><table class="scorecard-tbl" style="font-size:11px">
+          <thead><tr>
+            <th style="text-align:left;padding-left:10px;min-width:40px">H</th>
+            <th>Par</th><th>Prom.</th><th>Mín.</th>
+            <th style="background:#deeaf7;color:#006db3;min-width:28px">🦅</th>
+            <th style="background:#fde8ea;color:#c0392b;min-width:28px">🐦</th>
+            <th style="min-width:28px">Par</th>
+            <th style="min-width:28px">Bog</th>
+            <th style="min-width:28px">+2</th>
+            <th style="min-width:28px">+3</th>
+          </tr></thead>
           <tbody>
-            ${rondas.map(r => {
-              const holes = HOLES_DATA[r.id]||[];
-              const f9 = front.reduce((s,h)=>{const ho=holes.find(x=>x.h===h);return s+(ho?ho.s:0);},0);
-              const b9 = back.reduce((s,h)=>{const ho=holes.find(x=>x.h===h);return s+(ho?ho.s:0);},0);
-              const tot = r.shots || (f9+b9);
-              return `<tr>
-                <td class="row-label" style="font-size:10px;color:var(--muted)">${r.date}</td>
-                ${hNums.map(h=>{
-                  const ho=holes.find(x=>x.h===h);
-                  if(!ho) return '<td style="color:var(--muted)">—</td>';
-                  const st=cellStyle(ho.s,parByHole[h]);
-                  return `<td><span style="${st};display:inline-block;width:20px;height:20px;line-height:20px;font-size:11px;font-weight:700">${ho.s}</span></td>`;
-                }).join('')}
-                <td class="col-subtotal">${f9||'—'}</td>
-                <td class="col-total">${b9||'—'}</td>
-                <td class="col-total ${ouColor(r.ou)}" style="font-weight:700;background:#e8e2d4">${r.ou!=null?ouFmt(r.ou):'—'}</td>
-              </tr>`;
-            }).join('')}
-            <!-- Fila de promedios -->
-            <tr style="border-top:2px solid var(--border)">
-              <td class="row-label" style="font-size:10px;font-weight:700">Prom.</td>
-              ${hNums.map(h=>`<td style="font-weight:600;color:var(--gold2)">${avg1(hs[h]?.shots||[])}</td>`).join('')}
-              <td class="col-subtotal"></td><td class="col-total"></td>
-              <td class="col-total" style="font-weight:700;background:#e8e2d4;color:var(--gold2)">${parseFloat(avgOu)>0?'+':''}${avgOu}</td>
+            ${hNums.map(h=>`<tr>
+              <td style="color:var(--muted);text-align:left;padding-left:10px">${h}</td>
+              <td style="color:var(--muted)">${parByHole[h]||'—'}</td>
+              <td style="font-weight:600">${avg1(hs[h]?.shots||[])}</td>
+              <td style="color:var(--green2)">${min1(hs[h]?.shots||[])}</td>
+              <td style="background:#deeaf7;color:#006db3;font-weight:600">${hs[h]?.eagles||''}</td>
+              <td style="background:#fde8ea;color:#c0392b;font-weight:600">${hs[h]?.birdies||''}</td>
+              <td>${hs[h]?.pars||''}</td>
+              <td>${hs[h]?.bogeys||''}</td>
+              <td>${hs[h]?.doubles||''}</td>
+              <td>${hs[h]?.triples||''}</td>
+            </tr>`).join('')}
+            <tr style="border-top:2px solid var(--border);font-weight:700;background:var(--card2)">
+              <td style="text-align:left;padding-left:10px;color:var(--muted)">Tot</td>
+              <td style="color:var(--muted)">${sumP(hNums)}</td>
+              <td></td><td></td>
+              <td style="background:#deeaf7;color:#006db3">${hNums.reduce((s,h)=>s+(hs[h]?.eagles||0),0)||''}</td>
+              <td style="background:#fde8ea;color:#c0392b">${hNums.reduce((s,h)=>s+(hs[h]?.birdies||0),0)||''}</td>
+              <td>${hNums.reduce((s,h)=>s+(hs[h]?.pars||0),0)||''}</td>
+              <td>${hNums.reduce((s,h)=>s+(hs[h]?.bogeys||0),0)||''}</td>
+              <td>${hNums.reduce((s,h)=>s+(hs[h]?.doubles||0),0)||''}</td>
+              <td>${hNums.reduce((s,h)=>s+(hs[h]?.triples||0),0)||''}</td>
             </tr>
           </tbody>
-        </table>
-        </div>
+        </table></div>
       </div>
 
-      <!-- Stats por hoyo: Avg + Min + distribución -->
       <div style="display:flex;flex-direction:column;gap:12px">
-        <div class="card" style="padding:0;overflow:hidden">
-          <div style="padding:12px 16px;border-bottom:1px solid var(--border)"><h3 style="margin:0">Estadísticas por hoyo</h3></div>
-          <div class="scorecard-wrap">
-          <table class="scorecard-tbl" style="font-size:11px">
-            <thead><tr>
-              <th style="text-align:left;padding-left:10px">Hoyo</th>
-              <th>Par</th><th>Prom.</th><th>Mín.</th>
-              <th style="background:#deeaf7;color:#006db3">🦅</th>
-              <th style="background:#fde8ea;color:#c0392b">🐦</th>
-              <th>Par</th>
-              <th style="background:#f0f0ee;color:#444">Bog</th>
-              <th style="background:#e8e4e0;color:#222">+2</th>
-              <th style="background:#e0dbd5;color:#111">+3</th>
-            </tr></thead>
-            <tbody>
-              ${hNums.map(h => `<tr>
-                <td style="color:var(--muted);text-align:left;padding-left:10px">${h}</td>
-                <td style="color:var(--muted)">${parByHole[h]||'—'}</td>
-                <td style="font-weight:600">${avg1(hs[h]?.shots||[])}</td>
-                <td style="color:var(--green2)">${min1(hs[h]?.shots||[])}</td>
-                <td style="background:#deeaf7;color:#006db3;font-weight:600">${hs[h]?.eagles||''}</td>
-                <td style="background:#fde8ea;color:#c0392b;font-weight:600">${hs[h]?.birdies||''}</td>
-                <td>${hs[h]?.pars||''}</td>
-                <td>${hs[h]?.bogeys||''}</td>
-                <td>${hs[h]?.doubles||''}</td>
-                <td>${hs[h]?.triples||''}</td>
-              </tr>`).join('')}
-              <tr style="border-top:2px solid var(--border);font-weight:700">
-                <td style="text-align:left;padding-left:10px">Total</td>
-                <td style="color:var(--muted)">${sumP(hNums)}</td>
-                <td></td><td></td>
-                <td style="background:#deeaf7;color:#006db3">${hNums.reduce((s,h)=>s+(hs[h]?.eagles||0),0)||''}</td>
-                <td style="background:#fde8ea;color:#c0392b">${hNums.reduce((s,h)=>s+(hs[h]?.birdies||0),0)||''}</td>
-                <td>${hNums.reduce((s,h)=>s+(hs[h]?.pars||0),0)||''}</td>
-                <td>${hNums.reduce((s,h)=>s+(hs[h]?.bogeys||0),0)||''}</td>
-                <td>${hNums.reduce((s,h)=>s+(hs[h]?.doubles||0),0)||''}</td>
-                <td>${hNums.reduce((s,h)=>s+(hs[h]?.triples||0),0)||''}</td>
-              </tr>
-            </tbody>
-          </table>
-          </div>
-        </div>
-
-        <!-- Par 3/4/5 -->
         <div class="card" style="padding:14px">
-          <h3 style="margin-bottom:12px">Promedio por tipo</h3>
-          <table style="width:100%;font-size:12px;border-collapse:collapse">
-            <tr><th style="text-align:left;padding:4px 8px;color:var(--muted);font-size:10px">Par</th><th style="text-align:right;padding:4px 8px;color:var(--muted);font-size:10px">Prom.</th><th style="text-align:right;padding:4px 8px;color:var(--muted);font-size:10px">vs Par</th></tr>
-            ${[3,4,5].map(p=>{const a=pg[p];if(!a.length)return'';const av=(a.reduce((s,x)=>s+x,0)/a.length),diff=av-p;return `<tr style="border-top:1px solid var(--border)"><td style="padding:6px 8px;font-weight:700;color:var(--gold2)">Par ${p}</td><td style="text-align:right;padding:6px 8px;font-weight:600">${av.toFixed(2)}</td><td style="text-align:right;padding:6px 8px;color:${diff>0?'var(--red)':'var(--green2)'};font-size:12px">${diff>0?'+':''}${diff.toFixed(2)}</td></tr>`;}).join('')}
-          </table>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--gold2);margin-bottom:10px">Promedio por tipo</div>
+          ${[3,4,5].map(p=>{
+            const a=pg[p]; if(!a.length) return '';
+            const av=(a.reduce((s,x)=>s+x,0)/a.length), diff=av-p;
+            return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
+              <span style="font-weight:700;color:var(--gold2)">Par ${p}</span>
+              <span style="font-weight:600">${av.toFixed(2)}</span>
+              <span style="color:${diff>0?'var(--red)':'var(--green2)'};">${diff>0?'+':''}${diff.toFixed(2)}</span>
+            </div>`;
+          }).join('')}
+          <div style="font-size:10px;color:var(--muted);margin-top:8px">${pg[3].length+pg[4].length+pg[5].length} hoyos analizados</div>
+        </div>
+        <div class="card" style="padding:0;overflow:hidden;flex:1">
+          <div style="padding:10px 16px;border-bottom:1px solid var(--border);font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--gold2)">S/Par por año</div>
+          <div class="chart-wrap" style="height:160px;padding:8px"><canvas id="campo-chart-year"></canvas></div>
         </div>
       </div>
     </div>
-    ` : `<div class="card"><p style="color:var(--muted)">⚠️ Ejecuta <code>update_holes.py</code> y sube <code>data/holes.json</code> a GitHub para ver el scorecard detallado.</p>
-    <div style="margin-top:12px">
-      <table style="width:100%;font-size:13px;border-collapse:collapse">
-        <thead><tr><th style="text-align:left;padding:6px;border-bottom:1px solid var(--border)">Fecha</th><th style="padding:6px;border-bottom:1px solid var(--border)">S/Par</th><th style="padding:6px;border-bottom:1px solid var(--border)">Score</th></tr></thead>
-        <tbody>${rondas.map(r=>`<tr><td style="padding:6px;color:var(--muted)">${r.date}</td><td style="padding:6px;text-align:center" class="${ouColor(r.ou)}">${r.ou!=null?ouFmt(r.ou):'—'}</td><td style="padding:6px;text-align:center">${r.shots||'—'}</td></tr>`).join('')}</tbody>
-      </table>
-    </div></div>`}
+
+    <!-- FILA 3: Tabla de vueltas ANCHO COMPLETO -->
+    <div class="card" style="padding:0;overflow:hidden">
+      <div style="padding:10px 16px;border-bottom:1px solid var(--border);font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--gold2)">Scorecard por vuelta</div>
+      <div class="scorecard-wrap"><table class="scorecard-tbl" style="font-size:11px;width:100%">
+        <thead>
+          <tr>
+            <th class="row-label" style="min-width:90px;position:sticky;left:0;background:var(--card2)">Fecha</th>
+            ${front.map(h=>`<th>${h}</th>`).join('')}
+            <th class="col-subtotal">Out</th>
+            ${back.map(h=>`<th>${h}</th>`).join('')}
+            <th class="col-subtotal">In</th>
+            <th class="col-total" style="min-width:40px">Tot</th>
+          </tr>
+          <tr class="row-par">
+            <td class="row-label" style="font-size:10px;position:sticky;left:0;background:#e8f4ee">Par</td>
+            ${front.map(h=>`<td>${parByHole[h]||'—'}</td>`).join('')}
+            <td class="col-subtotal">${sumP(front)}</td>
+            ${back.map(h=>`<td>${parByHole[h]||'—'}</td>`).join('')}
+            <td class="col-subtotal">${sumP(back)}</td>
+            <td class="col-total">${sumP(hNums)}</td>
+          </tr>
+        </thead>
+        <tbody>
+          ${rondas.map(r=>{
+            const holes=HOLES_DATA[r.id]||[];
+            const getH = h => holes.find(x=>x.h===h);
+            const f9=front.reduce((s,h)=>{const ho=getH(h);return s+(ho?.s||0);},0);
+            const b9=back.reduce((s,h)=>{const ho=getH(h);return s+(ho?.s||0);},0);
+            return `<tr>
+              <td class="row-label" style="font-size:10px;color:var(--muted);position:sticky;left:0;background:var(--card)">${r.date}</td>
+              ${front.map(h=>{const ho=getH(h);if(!ho)return '<td style="color:var(--muted)">—</td>';const st=cellSt(ho.s,parByHole[h]);return `<td><span style="${st};display:inline-block;min-width:20px;height:20px;line-height:20px;font-size:11px;font-weight:700;text-align:center">${ho.s}</span></td>`;}).join('')}
+              <td class="col-subtotal">${f9||'—'}</td>
+              ${back.map(h=>{const ho=getH(h);if(!ho)return '<td style="color:var(--muted)">—</td>';const st=cellSt(ho.s,parByHole[h]);return `<td><span style="${st};display:inline-block;min-width:20px;height:20px;line-height:20px;font-size:11px;font-weight:700;text-align:center">${ho.s}</span></td>`;}).join('')}
+              <td class="col-subtotal">${b9||'—'}</td>
+              <td class="col-total ${ouColor(r.ou)}" style="font-weight:700">${r.ou!=null?ouFmt(r.ou):'—'}</td>
+            </tr>`;
+          }).join('')}
+          <tr style="border-top:2px solid var(--border);background:var(--card2)">
+            <td class="row-label" style="font-weight:700;font-size:10px;position:sticky;left:0;background:var(--card2)">Prom.</td>
+            ${front.map(h=>`<td style="font-weight:600;color:var(--gold2)">${avg1(hs[h]?.shots||[])}</td>`).join('')}
+            <td class="col-subtotal"></td>
+            ${back.map(h=>`<td style="font-weight:600;color:var(--gold2)">${avg1(hs[h]?.shots||[])}</td>`).join('')}
+            <td class="col-subtotal"></td>
+            <td class="col-total" style="font-weight:700;color:var(--gold2)">${parseFloat(avgOu)>0?'+':''}${avgOu}</td>
+          </tr>
+        </tbody>
+      </table></div>
+    </div>
+    ` : `<div class="card"><p style="color:var(--muted)">⚠️ Ejecuta <code>update_holes.py</code> y sube <code>data/holes.json</code> a GitHub para ver el scorecard.</p>
+    <div style="margin-top:12px"><table style="width:100%;font-size:13px;border-collapse:collapse">
+      <thead><tr><th style="text-align:left;padding:6px;border-bottom:1px solid var(--border)">Fecha</th><th style="padding:6px;border-bottom:1px solid var(--border)">S/Par</th></tr></thead>
+      <tbody>${rondas.map(r=>`<tr><td style="padding:6px;color:var(--muted)">${r.date}</td><td style="padding:6px;text-align:center" class="${ouColor(r.ou)}">${r.ou!=null?ouFmt(r.ou):'—'}</td></tr>`).join('')}</tbody>
+    </table></div></div>`}
   `;
+
+  setTimeout(()=>{
+    const ctx=document.getElementById('campo-chart-year');
+    if(ctx){
+      if(ctx._ch)ctx._ch.destroy();
+      const yAvgs=years.map(y=>{const o=byYear[y].ous;return o.length?(o.reduce((a,b)=>a+b,0)/o.length).toFixed(1):null;});
+      ctx._ch=new Chart(ctx,{type:'bar',data:{labels:years,datasets:[
+        {data:yAvgs,backgroundColor:yAvgs.map(v=>parseFloat(v)<=0?'#1e5e3a88':'#c0392b88'),borderRadius:3},
+        {type:'line',data:yAvgs,borderColor:'#9a6e1a',borderWidth:2,pointRadius:3,fill:false,tension:.3}
+      ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+        scales:{x:{grid:{color:'#d4cbb8'},ticks:{color:'#6b6454',font:{size:10}}},
+                y:{grid:{color:'#d4cbb8'},ticks:{color:'#6b6454',font:{size:10}}}}}});
+    }
+  },150);
 }
 
 
