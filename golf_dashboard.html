@@ -1371,7 +1371,7 @@ function loadCampo(courseName) {
           <h3 style="margin-bottom:12px">Promedio por tipo</h3>
           <table style="width:100%;font-size:12px;border-collapse:collapse">
             <tr><th style="text-align:left;padding:4px 8px;color:var(--muted);font-size:10px">Par</th><th style="text-align:right;padding:4px 8px;color:var(--muted);font-size:10px">Prom.</th><th style="text-align:right;padding:4px 8px;color:var(--muted);font-size:10px">vs Par</th></tr>
-            ${[3,4,5].map(p=>{const a=pg[p];if(!a.length)return'';const av=(a.reduce((s,x)=>s+x,0)/a.length),diff=av-p;return `<tr style="border-top:1px solid var(--border)"><td style="padding:6px 8px;font-weight:700;color:var(--gold2)">Par ${p}</td><td style="text-align:right;padding:6px 8px;font-weight:600">${av.toFixed(2)}</td><td style="text-align:right;padding:6px 8px;color:${diff>0?'var(--red)':'var(--green2)';font-size:12px">${diff>0?'+':''}${diff.toFixed(2)}</td></tr>`;}).join('')}
+            ${[3,4,5].map(p=>{const a=pg[p];if(!a.length)return'';const av=(a.reduce((s,x)=>s+x,0)/a.length),diff=av-p;return `<tr style="border-top:1px solid var(--border)"><td style="padding:6px 8px;font-weight:700;color:var(--gold2)">Par ${p}</td><td style="text-align:right;padding:6px 8px;font-weight:600">${av.toFixed(2)}</td><td style="text-align:right;padding:6px 8px;color:${diff>0?'var(--red)':'var(--green2)'};font-size:12px">${diff>0?'+':''}${diff.toFixed(2)}</td></tr>`;}).join('')}
           </table>
         </div>
       </div>
