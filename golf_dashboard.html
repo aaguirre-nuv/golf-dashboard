@@ -1173,6 +1173,153 @@ function selectCampo(name) {
   loadCampo(name);
 }
 
+
+function loadCampo(courseName) {
+  const content = document.getElementById('campo-content');
+  if (!courseName) {
+    content.innerHTML = '<div class="campo-placeholder"><div class="ph-icon">⛳</div><p>Busca un campo para ver tu historial</p></div>';
+    return;
+  }
+
+  const rondas = D18.filter(r => r.course === courseName && !r.src)
+    .sort((a,b) => b.date.localeCompare(a.date));
+  const rondasConHoyos = rondas.filter(r => HOLES_DATA[r.id]);
+
+  if (!rondas.length) {
+    content.innerHTML = '<div class="campo-placeholder"><div class="ph-icon">📊</div><p>Sin vueltas registradas para este campo</p></div>';
+    return;
+  }
+
+  // Par por hoyo
+  const parByHole = {};
+  for (const r of rondasConHoyos) {
+    const hs = HOLES_DATA[r.id]||[];
+    hs.forEach(h => { if(h.par && !parByHole[h.h]) parByHole[h.h]=h.par; });
+    if(Object.keys(parByHole).length>=18) break;
+  }
+
+  const holeNums = Object.keys(parByHole).map(Number).sort((a,b)=>a-b);
+  const front = holeNums.filter(h=>h<=9);
+  const back  = holeNums.filter(h=>h>9);
+
+  // Stats por hoyo
+  const holeStats = {};
+  holeNums.forEach(h => { holeStats[h]={shots:[],eagles:0,birdies:0,pars:0,bogeys:0,doubles:0}; });
+  rondasConHoyos.forEach(r => {
+    (HOLES_DATA[r.id]||[]).forEach(h => {
+      if(!holeStats[h.h]||!h.s) return;
+      holeStats[h.h].shots.push(h.s);
+      const par=parByHole[h.h]; if(!par) return;
+      const d=h.s-par;
+      if(d<=-2)holeStats[h.h].eagles++;
+      else if(d===-1)holeStats[h.h].birdies++;
+      else if(d===0)holeStats[h.h].pars++;
+      else if(d===1)holeStats[h.h].bogeys++;
+      else holeStats[h.h].doubles++;
+    });
+  });
+
+  const avg1 = arr => arr.length?(arr.reduce((a,b)=>a+b,0)/arr.length).toFixed(1):'—';
+  const min1 = arr => arr.length?Math.min(...arr):'—';
+  const sumPar = hs => hs.reduce((s,h)=>s+(parByHole[h]||0),0);
+  const sumAvg = hs => { const a=hs.map(h=>holeStats[h]?.shots).filter(a=>a?.length); return a.length?(a.reduce((s,arr)=>s+(arr.reduce((x,y)=>x+y,0)/arr.length),0)).toFixed(1):'—'; };
+  const sumMin = hs => { const m=hs.map(h=>holeStats[h]?.shots).filter(a=>a?.length); return m.length?m.reduce((s,a)=>s+Math.min(...a),0):'—'; };
+
+  // KPIs
+  const ous   = rondas.map(r=>r.ou).filter(x=>x!=null);
+  const avgOu = ous.length?(ous.reduce((a,b)=>a+b,0)/ous.length).toFixed(1):'—';
+  const bestOu= ous.length?Math.min(...ous):'—';
+  const bestR = rondas.find(r=>r.ou===Math.min(...ous));
+  const byYear= {};
+  rondas.forEach(r=>{byYear[r.y]=(byYear[r.y]||0)+1;});
+
+  // Scorecard HTML
+  const rcells = (hs,fn,sub) => hs.map(h=>`<td>${fn(h)}</td>`).join('')+`<td class="col-subtotal">${sub}</td>`;
+  const scorecardHtml = rondasConHoyos.length && holeNums.length ? `
+    <div class="scorecard-wrap"><table class="scorecard-tbl">
+      <thead><tr>
+        <th class="row-label">Hoyo</th>
+        ${front.map(h=>`<th>${h}</th>`).join('')}<th class="col-subtotal">Out</th>
+        ${back.map(h=>`<th>${h}</th>`).join('')}<th class="col-subtotal">In</th>
+        <th class="col-total">Tot</th>
+      </tr></thead>
+      <tbody>
+        <tr class="row-par"><td class="row-label">Par</td>${rcells(front,h=>parByHole[h]||'—',sumPar(front))}${rcells(back,h=>parByHole[h]||'—',sumPar(back))}<td class="col-total">${sumPar(holeNums)}</td></tr>
+        <tr class="row-avg"><td class="row-label">Prom.</td>${rcells(front,h=>avg1(holeStats[h]?.shots||[]),sumAvg(front))}${rcells(back,h=>avg1(holeStats[h]?.shots||[]),sumAvg(back))}<td class="col-total">${sumAvg(holeNums)}</td></tr>
+        <tr class="row-min"><td class="row-label">Mínimo</td>${rcells(front,h=>min1(holeStats[h]?.shots||[]),sumMin(front))}${rcells(back,h=>min1(holeStats[h]?.shots||[]),sumMin(back))}<td class="col-total">${sumMin(holeNums)}</td></tr>
+        <tr class="row-eagle"><td class="row-label">🦅 Eagle</td>${rcells(front,h=>holeStats[h]?.eagles||'','')}${rcells(back,h=>holeStats[h]?.eagles||'','')}<td class="col-total">${holeNums.reduce((s,h)=>s+(holeStats[h]?.eagles||0),0)||''}</td></tr>
+        <tr class="row-birdie"><td class="row-label">🐦 Birdie</td>${rcells(front,h=>holeStats[h]?.birdies||'','')}${rcells(back,h=>holeStats[h]?.birdies||'','')}<td class="col-total">${holeNums.reduce((s,h)=>s+(holeStats[h]?.birdies||0),0)||''}</td></tr>
+        <tr class="row-bogey"><td class="row-label">Bogey+</td>${rcells(front,h=>(holeStats[h]?.bogeys||0)+(holeStats[h]?.doubles||0)||'','')}${rcells(back,h=>(holeStats[h]?.bogeys||0)+(holeStats[h]?.doubles||0)||'','')}<td class="col-total">${holeNums.reduce((s,h)=>s+(holeStats[h]?.bogeys||0)+(holeStats[h]?.doubles||0),0)||''}</td></tr>
+      </tbody>
+    </table></div>` : '<p style="color:var(--muted);font-size:13px;margin-top:8px">⚠️ Ejecuta <code>update_holes.py</code> y sube <code>data/holes.json</code> a GitHub para ver el scorecard.</p>';
+
+  // Par groups
+  const parGroups={3:[],4:[],5:[]};
+  rondasConHoyos.forEach(r=>{(HOLES_DATA[r.id]||[]).forEach(h=>{if(h.par&&parGroups[h.par]&&h.s)parGroups[h.par].push(h.s);});});
+
+  const years    = Object.keys(byYear).sort();
+  const yearAvgs = years.map(y=>{const rs=rondas.filter(r=>r.y==y),o=rs.map(r=>r.ou).filter(x=>x!=null);return o.length?(o.reduce((a,b)=>a+b,0)/o.length).toFixed(1):null;});
+
+  content.innerHTML = `
+    <div class="kpi-grid" style="margin-bottom:20px">
+      <div class="kpi"><div class="kpi-label">Vueltas</div><div class="kpi-val">${rondas.length}</div><div class="kpi-sub">${rondasConHoyos.length} con scorecard</div></div>
+      <div class="kpi"><div class="kpi-label">Scoring avg</div><div class="kpi-val">${parseFloat(avgOu)>0?'+':''}${avgOu}</div><div class="kpi-sub">S/Par promedio</div></div>
+      <div class="kpi"><div class="kpi-label">Mejor vuelta</div><div class="kpi-val">${bestOu>0?'+':''}${bestOu}</div><div class="kpi-sub">${bestR?.date||''}</div></div>
+      <div class="kpi"><div class="kpi-label">Última vuelta</div><div class="kpi-val">${rondas[0].ou!=null?(rondas[0].ou>0?'+':'')+rondas[0].ou:'—'}</div><div class="kpi-sub">${rondas[0].date}</div></div>
+    </div>
+    <div class="card" style="margin-bottom:16px">
+      <h3>Scorecard agregado (${rondasConHoyos.length} vueltas)</h3>
+      ${scorecardHtml}
+    </div>
+    <div class="card-grid" style="margin-bottom:16px">
+      <div class="card">
+        <h3>Evolución S/Par por año</h3>
+        <div class="chart-wrap"><canvas id="campo-chart-year"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>Promedio por tipo de hoyo</h3>
+        <div style="display:flex;flex-direction:column;gap:12px;margin-top:8px">
+          ${[3,4,5].map(p=>{const a=parGroups[p];if(!a.length)return'';const av=(a.reduce((s,x)=>s+x,0)/a.length).toFixed(2),diff=(av-p).toFixed(2);return `<div style="display:flex;align-items:center;gap:12px"><div style="width:50px;font-weight:700;color:var(--gold2)">Par ${p}</div><div style="flex:1;background:var(--card2);border-radius:3px;height:8px"><div style="background:var(--green2);height:8px;border-radius:3px;width:${Math.min(100,(av/p/1.5)*100)}%"></div></div><div style="width:60px;text-align:right;font-weight:600">${av}</div><div style="width:50px;color:${diff>0?'var(--red)':'var(--green2)'};font-size:11px">${diff>0?'+':''}${diff}</div></div>`;}).join('')}
+          ${rondasConHoyos.length?`<div style="font-size:11px;color:var(--muted)">${parGroups[3].length+parGroups[4].length+parGroups[5].length} hoyos analizados</div>`:''}
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Historial de vueltas</h3>
+      <div id="campo-rondas-list"></div>
+    </div>`;
+
+  setTimeout(()=>{
+    const ctx=document.getElementById('campo-chart-year');
+    if(ctx){if(ctx._ch)ctx._ch.destroy();ctx._ch=new Chart(ctx,{type:'bar',data:{labels:years,datasets:[{label:'S/Par',data:yearAvgs,backgroundColor:yearAvgs.map(v=>parseFloat(v)<=0?'#1e5e3a88':'#c0392b88'),borderRadius:3},{type:'line',label:'',data:yearAvgs,borderColor:'#9a6e1a',borderWidth:2,pointRadius:4,fill:false,tension:.3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'#d4cbb8'},ticks:{color:'#6b6454'}},y:{grid:{color:'#d4cbb8'},ticks:{color:'#6b6454'}}}}});}
+  },100);
+
+  const listEl=document.getElementById('campo-rondas-list');
+  listEl.innerHTML=rondas.map((r,i)=>{
+    const hs=HOLES_DATA[r.id]||[];
+    const f9=hs.filter(h=>h.h<=9).reduce((s,h)=>s+h.s,0);
+    const b9=hs.filter(h=>h.h>9).reduce((s,h)=>s+h.s,0);
+    const scoreRow=holeNums.map(h=>{const hole=hs.find(x=>x.h===h);if(!hole)return '<td>—</td>';const par=parByHole[h],d=par?hole.s-par:null,color=d===null?'':d<=-2?'color:#006db3':d===-1?'color:#c0392b':d===0?'color:#888':d===1?'color:#6b5a3e':'color:#3d2810';return `<td style="font-weight:600;${color}">${hole.s}</td>`;}).join('');
+    return `<div class="campo-ronda">
+      <div class="campo-ronda-header" onclick="toggleRonda('ronda-${i}')">
+        <span style="color:var(--muted);font-size:11px">${r.date}</span>
+        <div style="display:flex;gap:16px;align-items:center">
+          ${f9?`<span style="font-size:11px;color:var(--muted)">Out:${f9}</span>`:''}
+          ${b9?`<span style="font-size:11px;color:var(--muted)">In:${b9}</span>`:''}
+          <span class="${ouColor(r.ou)}" style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700">${r.ou!=null?ouFmt(r.ou):'—'}</span>
+        </div>
+      </div>
+      ${hs.length?`<div class="campo-ronda-holes" id="ronda-${i}"><table>
+        <tr><th>H</th>${holeNums.map(h=>`<th>${h}</th>`).join('')}</tr>
+        <tr><td style="color:var(--muted)">Par</td>${holeNums.map(h=>`<td style="color:var(--muted)">${parByHole[h]||'—'}</td>`).join('')}</tr>
+        <tr><td>Score</td>${scoreRow}</tr>
+      </table></div>`:''}
+    </div>`;
+  }).join('');
+}
+
+function toggleRonda(id){const el=document.getElementById(id);if(el)el.classList.toggle('open');}
+
 function clearCampo() {
   document.getElementById('campo-search').value = '';
   const label = document.getElementById('campo-selected-label');
