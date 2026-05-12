@@ -1371,9 +1371,19 @@ function loadCampo(courseName) {
         <tbody>
           ${rondas.map(r=>{
             const holes=HOLES_DATA[r.id]||[];
+            const hasH = holes.length > 0;
             const getH = h => holes.find(x=>x.h===h);
             const f9=front.reduce((s,h)=>{const ho=getH(h);return s+(ho?.s||0);},0);
             const b9=back.reduce((s,h)=>{const ho=getH(h);return s+(ho?.s||0);},0);
+            const totalCols = front.length + 1 + back.length + 1; // hoyos + Out + In
+            if (!hasH) {
+              // Vuelta sin datos de hoyo: mostrar fecha + score a todo ancho
+              return `<tr style="opacity:.7">
+                <td class="row-label" style="font-size:10px;color:var(--muted);position:sticky;left:0;background:var(--card)">${r.date}</td>
+                <td colspan="${totalCols}" style="text-align:center;font-size:11px;color:var(--muted);font-style:italic">Sin datos de hoyo</td>
+                <td class="col-total ${ouColor(r.ou)}" style="font-weight:700">${r.ou!=null?ouFmt(r.ou):'—'}</td>
+              </tr>`;
+            }
             return `<tr>
               <td class="row-label" style="font-size:10px;color:var(--muted);position:sticky;left:0;background:var(--card)">${r.date}</td>
               ${front.map(h=>{const ho=getH(h);if(!ho)return '<td style="color:var(--muted)">—</td>';const st=cellSt(ho.s,parByHole[h]);return `<td><span style="${st};display:inline-block;min-width:20px;height:20px;line-height:20px;font-size:11px;font-weight:700;text-align:center">${ho.s}</span></td>`;}).join('')}
