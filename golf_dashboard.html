@@ -1216,6 +1216,29 @@ function loadCampo(courseName) {
   const avg1 = a => a.length?(a.reduce((x,y)=>x+y,0)/a.length).toFixed(1):'—';
   const min1 = a => a.length?Math.min(...a):'—';
   const sumP = arr => arr.reduce((s,h)=>s+(parByHole[h]||0),0);
+
+  // Ranking de hoyos por promedio vs par (solo hoyos con datos)
+  const holeRanking = hNums
+    .filter(h => hs[h]?.shots?.length > 0 && parByHole[h])
+    .map(h => ({ h, diff: (hs[h].shots.reduce((a,b)=>a+b,0)/hs[h].shots.length) - parByHole[h] }))
+    .sort((a,b) => a.diff - b.diff); // menor diff = mejor hoyo
+
+  // Colores degradados: 4 mejores (verde) y 4 peores (rojo)
+  // Verde: #1e5e3a (más oscuro) → #c8e6d8 (más claro)
+  // Rojo:  #8b1a0a (más oscuro) → #fdddd9 (más claro)
+  const bestColors  = ['#1e5e3a','#2d7a52','#5a9e7a','#c8e6d8'];
+  const worstColors = ['#8b1a0a','#c0392b','#e07070','#fdddd9'];
+  const bestText    = ['#fff','#fff','#fff','#1e5e3a'];
+  const worstText   = ['#fff','#fff','#fff','#8b1a0a'];
+
+  const holeColor = {};
+  holeRanking.slice(0,4).forEach((item,i) => {
+    holeColor[item.h] = { bg: bestColors[i], text: bestText[i], rank: i+1, type:'best' };
+  });
+  holeRanking.slice(-4).reverse().forEach((item,i) => {
+    if (!holeColor[item.h]) // no solapar con mejores
+      holeColor[item.h] = { bg: worstColors[i], text: worstText[i], rank: i+1, type:'worst' };
+  });
   const cellSt = (s,p) => {
     if(!p||!s) return '';
     const d=s-p;
@@ -1278,7 +1301,7 @@ function loadCampo(courseName) {
             ${hNums.map(h=>`<tr>
               <td style="color:var(--muted);text-align:left;padding-left:10px">${h}</td>
               <td style="color:var(--muted)">${parByHole[h]||'—'}</td>
-              <td style="font-weight:600">${avg1(hs[h]?.shots||[])}</td>
+              <td style="${holeColor[h]?'background:'+holeColor[h].bg+';color:'+holeColor[h].text+';font-weight:700':'font-weight:600'}">${avg1(hs[h]?.shots||[])}${holeColor[h]?(holeColor[h].type==='best'?'<span style="font-size:9px;opacity:.7"> ▲'+holeColor[h].rank+'</span>':'<span style="font-size:9px;opacity:.7"> ▼'+holeColor[h].rank+'</span>'):''}</td>
               <td style="color:var(--green2)">${min1(hs[h]?.shots||[])}</td>
               <td style="background:#deeaf7;color:#006db3;font-weight:600">${hs[h]?.eagles||''}</td>
               <td style="background:#fde8ea;color:#c0392b;font-weight:600">${hs[h]?.birdies||''}</td>
