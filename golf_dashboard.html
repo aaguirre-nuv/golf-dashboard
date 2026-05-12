@@ -1183,140 +1183,209 @@ function loadCampo(courseName) {
 
   const rondas = D18.filter(r => r.course === courseName && !r.src)
     .sort((a,b) => b.date.localeCompare(a.date));
-  const rondasConHoyos = rondas.filter(r => HOLES_DATA[r.id]);
+  const rondasH = rondas.filter(r => HOLES_DATA[r.id]);
 
   if (!rondas.length) {
-    content.innerHTML = '<div class="campo-placeholder"><div class="ph-icon">📊</div><p>Sin vueltas registradas para este campo</p></div>';
+    content.innerHTML = '<div class="campo-placeholder"><div class="ph-icon">📊</div><p>Sin vueltas registradas</p></div>';
     return;
   }
 
   // Par por hoyo
   const parByHole = {};
-  for (const r of rondasConHoyos) {
-    const hs = HOLES_DATA[r.id]||[];
-    hs.forEach(h => { if(h.par && !parByHole[h.h]) parByHole[h.h]=h.par; });
+  for (const r of rondasH) {
+    (HOLES_DATA[r.id]||[]).forEach(h => { if(h.par && !parByHole[h.h]) parByHole[h.h]=h.par; });
     if(Object.keys(parByHole).length>=18) break;
   }
-
-  const holeNums = Object.keys(parByHole).map(Number).sort((a,b)=>a-b);
-  const front = holeNums.filter(h=>h<=9);
-  const back  = holeNums.filter(h=>h>9);
+  const hNums = Object.keys(parByHole).map(Number).sort((a,b)=>a-b);
+  const front = hNums.filter(h=>h<=9);
+  const back  = hNums.filter(h=>h>9);
 
   // Stats por hoyo
-  const holeStats = {};
-  holeNums.forEach(h => { holeStats[h]={shots:[],eagles:0,birdies:0,pars:0,bogeys:0,doubles:0}; });
-  rondasConHoyos.forEach(r => {
+  const hs = {}; 
+  hNums.forEach(h => { hs[h]={shots:[],eagles:0,birdies:0,pars:0,bogeys:0,doubles:0,triples:0}; });
+  rondasH.forEach(r => {
     (HOLES_DATA[r.id]||[]).forEach(h => {
-      if(!holeStats[h.h]||!h.s) return;
-      holeStats[h.h].shots.push(h.s);
-      const par=parByHole[h.h]; if(!par) return;
-      const d=h.s-par;
-      if(d<=-2)holeStats[h.h].eagles++;
-      else if(d===-1)holeStats[h.h].birdies++;
-      else if(d===0)holeStats[h.h].pars++;
-      else if(d===1)holeStats[h.h].bogeys++;
-      else holeStats[h.h].doubles++;
+      if(!hs[h.h]||!h.s) return;
+      hs[h.h].shots.push(h.s);
+      const p=parByHole[h.h]; if(!p) return;
+      const d=h.s-p;
+      if(d<=-2)hs[h.h].eagles++;
+      else if(d===-1)hs[h.h].birdies++;
+      else if(d===0)hs[h.h].pars++;
+      else if(d===1)hs[h.h].bogeys++;
+      else if(d===2)hs[h.h].doubles++;
+      else hs[h.h].triples++;
     });
   });
 
-  const avg1 = arr => arr.length?(arr.reduce((a,b)=>a+b,0)/arr.length).toFixed(1):'—';
-  const min1 = arr => arr.length?Math.min(...arr):'—';
-  const sumPar = hs => hs.reduce((s,h)=>s+(parByHole[h]||0),0);
-  const sumAvg = hs => { const a=hs.map(h=>holeStats[h]?.shots).filter(a=>a?.length); return a.length?(a.reduce((s,arr)=>s+(arr.reduce((x,y)=>x+y,0)/arr.length),0)).toFixed(1):'—'; };
-  const sumMin = hs => { const m=hs.map(h=>holeStats[h]?.shots).filter(a=>a?.length); return m.length?m.reduce((s,a)=>s+Math.min(...a),0):'—'; };
+  const avg1 = a => a.length?(a.reduce((x,y)=>x+y,0)/a.length).toFixed(1):'—';
+  const min1 = a => a.length?Math.min(...a):'—';
+  const sumP = arr => arr.reduce((s,h)=>s+(parByHole[h]||0),0);
 
-  // KPIs
+  // Colores PGA para celdas
+  const cellStyle = (s,p) => {
+    if(!p||!s) return '';
+    const d=s-p;
+    if(d<=-2) return 'background:#006db3;color:#fff;border-radius:50%';
+    if(d===-1) return 'background:#e8192c;color:#fff;border-radius:50%';
+    if(d===0)  return 'color:#1a1a1a';
+    if(d===1)  return 'background:#1a1a1a;color:#fff';
+    return 'background:#1a1a1a;color:#fff;outline:2px solid #1a1a1a;outline-offset:2px';
+  };
+
+  // KPIs + tabla de años
   const ous   = rondas.map(r=>r.ou).filter(x=>x!=null);
   const avgOu = ous.length?(ous.reduce((a,b)=>a+b,0)/ous.length).toFixed(1):'—';
   const bestOu= ous.length?Math.min(...ous):'—';
   const bestR = rondas.find(r=>r.ou===Math.min(...ous));
   const byYear= {};
-  rondas.forEach(r=>{byYear[r.y]=(byYear[r.y]||0)+1;});
-
-  // Scorecard HTML
-  const rcells = (hs,fn,sub) => hs.map(h=>`<td>${fn(h)}</td>`).join('')+`<td class="col-subtotal">${sub}</td>`;
-  const scorecardHtml = rondasConHoyos.length && holeNums.length ? `
-    <div class="scorecard-wrap"><table class="scorecard-tbl">
-      <thead><tr>
-        <th class="row-label">Hoyo</th>
-        ${front.map(h=>`<th>${h}</th>`).join('')}<th class="col-subtotal">Out</th>
-        ${back.map(h=>`<th>${h}</th>`).join('')}<th class="col-subtotal">In</th>
-        <th class="col-total">Tot</th>
-      </tr></thead>
-      <tbody>
-        <tr class="row-par"><td class="row-label">Par</td>${rcells(front,h=>parByHole[h]||'—',sumPar(front))}${rcells(back,h=>parByHole[h]||'—',sumPar(back))}<td class="col-total">${sumPar(holeNums)}</td></tr>
-        <tr class="row-avg"><td class="row-label">Prom.</td>${rcells(front,h=>avg1(holeStats[h]?.shots||[]),sumAvg(front))}${rcells(back,h=>avg1(holeStats[h]?.shots||[]),sumAvg(back))}<td class="col-total">${sumAvg(holeNums)}</td></tr>
-        <tr class="row-min"><td class="row-label">Mínimo</td>${rcells(front,h=>min1(holeStats[h]?.shots||[]),sumMin(front))}${rcells(back,h=>min1(holeStats[h]?.shots||[]),sumMin(back))}<td class="col-total">${sumMin(holeNums)}</td></tr>
-        <tr class="row-eagle"><td class="row-label">🦅 Eagle</td>${rcells(front,h=>holeStats[h]?.eagles||'','')}${rcells(back,h=>holeStats[h]?.eagles||'','')}<td class="col-total">${holeNums.reduce((s,h)=>s+(holeStats[h]?.eagles||0),0)||''}</td></tr>
-        <tr class="row-birdie"><td class="row-label">🐦 Birdie</td>${rcells(front,h=>holeStats[h]?.birdies||'','')}${rcells(back,h=>holeStats[h]?.birdies||'','')}<td class="col-total">${holeNums.reduce((s,h)=>s+(holeStats[h]?.birdies||0),0)||''}</td></tr>
-        <tr class="row-bogey"><td class="row-label">Bogey+</td>${rcells(front,h=>(holeStats[h]?.bogeys||0)+(holeStats[h]?.doubles||0)||'','')}${rcells(back,h=>(holeStats[h]?.bogeys||0)+(holeStats[h]?.doubles||0)||'','')}<td class="col-total">${holeNums.reduce((s,h)=>s+(holeStats[h]?.bogeys||0)+(holeStats[h]?.doubles||0),0)||''}</td></tr>
-      </tbody>
-    </table></div>` : '<p style="color:var(--muted);font-size:13px;margin-top:8px">⚠️ Ejecuta <code>update_holes.py</code> y sube <code>data/holes.json</code> a GitHub para ver el scorecard.</p>';
+  rondas.forEach(r=>{if(!byYear[r.y])byYear[r.y]={n:0,ous:[]};byYear[r.y].n++;if(r.ou!=null)byYear[r.y].ous.push(r.ou);});
+  const years = Object.keys(byYear).sort();
+  const yearRow1 = years.map(y=>`<td>${byYear[y].n}</td>`).join('');
+  const yearRow2 = years.map(y=>{const o=byYear[y].ous;return `<td>${o.length?(o.reduce((a,b)=>a+b,0)/o.length).toFixed(1):'—'}</td>`;}).join('');
 
   // Par groups
-  const parGroups={3:[],4:[],5:[]};
-  rondasConHoyos.forEach(r=>{(HOLES_DATA[r.id]||[]).forEach(h=>{if(h.par&&parGroups[h.par]&&h.s)parGroups[h.par].push(h.s);});});
-
-  const years    = Object.keys(byYear).sort();
-  const yearAvgs = years.map(y=>{const rs=rondas.filter(r=>r.y==y),o=rs.map(r=>r.ou).filter(x=>x!=null);return o.length?(o.reduce((a,b)=>a+b,0)/o.length).toFixed(1):null;});
+  const pg={3:[],4:[],5:[]};
+  rondasH.forEach(r=>{(HOLES_DATA[r.id]||[]).forEach(h=>{if(h.par&&pg[h.par]&&h.s)pg[h.par].push(h.s);});});
 
   content.innerHTML = `
-    <div class="kpi-grid" style="margin-bottom:20px">
-      <div class="kpi"><div class="kpi-label">Vueltas</div><div class="kpi-val">${rondas.length}</div><div class="kpi-sub">${rondasConHoyos.length} con scorecard</div></div>
-      <div class="kpi"><div class="kpi-label">Scoring avg</div><div class="kpi-val">${parseFloat(avgOu)>0?'+':''}${avgOu}</div><div class="kpi-sub">S/Par promedio</div></div>
-      <div class="kpi"><div class="kpi-label">Mejor vuelta</div><div class="kpi-val">${bestOu>0?'+':''}${bestOu}</div><div class="kpi-sub">${bestR?.date||''}</div></div>
-      <div class="kpi"><div class="kpi-label">Última vuelta</div><div class="kpi-val">${rondas[0].ou!=null?(rondas[0].ou>0?'+':'')+rondas[0].ou:'—'}</div><div class="kpi-sub">${rondas[0].date}</div></div>
-    </div>
-    <div class="card" style="margin-bottom:16px">
-      <h3>Scorecard agregado (${rondasConHoyos.length} vueltas)</h3>
-      ${scorecardHtml}
-    </div>
-    <div class="card-grid" style="margin-bottom:16px">
-      <div class="card">
-        <h3>Evolución S/Par por año</h3>
-        <div class="chart-wrap"><canvas id="campo-chart-year"></canvas></div>
+    <!-- KPIs + años -->
+    <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:20px;align-items:flex-start">
+      <div class="kpi-grid" style="flex:1;min-width:240px;margin:0">
+        <div class="kpi"><div class="kpi-label">Vueltas</div><div class="kpi-val">${rondas.length}</div><div class="kpi-sub">${rondasH.length} con scorecard</div></div>
+        <div class="kpi"><div class="kpi-label">Prom. S/Par</div><div class="kpi-val">${parseFloat(avgOu)>0?'+':''}${avgOu}</div><div class="kpi-sub">scoring avg</div></div>
+        <div class="kpi"><div class="kpi-label">Mejor</div><div class="kpi-val">${bestOu>0?'+':''}${bestOu}</div><div class="kpi-sub">${bestR?.date||''}</div></div>
       </div>
-      <div class="card">
-        <h3>Promedio por tipo de hoyo</h3>
-        <div style="display:flex;flex-direction:column;gap:12px;margin-top:8px">
-          ${[3,4,5].map(p=>{const a=parGroups[p];if(!a.length)return'';const av=(a.reduce((s,x)=>s+x,0)/a.length).toFixed(2),diff=(av-p).toFixed(2);return `<div style="display:flex;align-items:center;gap:12px"><div style="width:50px;font-weight:700;color:var(--gold2)">Par ${p}</div><div style="flex:1;background:var(--card2);border-radius:3px;height:8px"><div style="background:var(--green2);height:8px;border-radius:3px;width:${Math.min(100,(av/p/1.5)*100)}%"></div></div><div style="width:60px;text-align:right;font-weight:600">${av}</div><div style="width:50px;color:${diff>0?'var(--red)':'var(--green2)'};font-size:11px">${diff>0?'+':''}${diff}</div></div>`;}).join('')}
-          ${rondasConHoyos.length?`<div style="font-size:11px;color:var(--muted)">${parGroups[3].length+parGroups[4].length+parGroups[5].length} hoyos analizados</div>`:''}
+      <div class="card" style="flex:2;min-width:280px;padding:14px">
+        <table style="width:100%;font-size:12px;border-collapse:collapse">
+          <tr><td style="color:var(--muted);font-size:10px;padding:3px 6px"></td>${years.map(y=>`<th style="padding:3px 8px;color:var(--muted);font-size:10px;text-align:center">${y}</th>`).join('')}<th style="padding:3px 8px;color:var(--gold2);font-size:10px">Total</th></tr>
+          <tr><td style="color:var(--muted);font-size:11px;padding:3px 6px"># Vueltas</td>${yearRow1}<td style="font-weight:700;text-align:center;padding:3px 8px">${rondas.length}</td></tr>
+          <tr><td style="color:var(--muted);font-size:11px;padding:3px 6px">S/Par avg</td>${yearRow2}<td style="font-weight:700;text-align:center;padding:3px 8px">${parseFloat(avgOu)>0?'+':''}${avgOu}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- Layout principal: tabla vueltas | stats por hoyo -->
+    ${rondasH.length ? `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+
+      <!-- Tabla de vueltas con scorecard siempre visible -->
+      <div class="card" style="padding:0;overflow:hidden">
+        <div style="padding:12px 16px;border-bottom:1px solid var(--border)"><h3 style="margin:0">Scorecard por vuelta</h3></div>
+        <div class="scorecard-wrap">
+        <table class="scorecard-tbl" style="font-size:11px">
+          <thead>
+            <tr>
+              <th class="row-label" style="min-width:90px">Fecha</th>
+              ${hNums.map(h=>`<th>${h}</th>`).join('')}
+              <th class="col-subtotal">Out</th>
+              <th class="col-total">In</th>
+              <th class="col-total" style="background:#d4cbb8">Tot</th>
+            </tr>
+            <tr class="row-par">
+              <td class="row-label" style="font-size:10px">Par</td>
+              ${hNums.map(h=>`<td>${parByHole[h]||'—'}</td>`).join('')}
+              <td class="col-subtotal">${sumP(front)}</td>
+              <td class="col-total">${sumP(back)}</td>
+              <td class="col-total" style="background:#c8bda0">${sumP(hNums)}</td>
+            </tr>
+          </thead>
+          <tbody>
+            ${rondas.map(r => {
+              const holes = HOLES_DATA[r.id]||[];
+              const f9 = front.reduce((s,h)=>{const ho=holes.find(x=>x.h===h);return s+(ho?ho.s:0);},0);
+              const b9 = back.reduce((s,h)=>{const ho=holes.find(x=>x.h===h);return s+(ho?ho.s:0);},0);
+              const tot = r.shots || (f9+b9);
+              return `<tr>
+                <td class="row-label" style="font-size:10px;color:var(--muted)">${r.date}</td>
+                ${hNums.map(h=>{
+                  const ho=holes.find(x=>x.h===h);
+                  if(!ho) return '<td style="color:var(--muted)">—</td>';
+                  const st=cellStyle(ho.s,parByHole[h]);
+                  return `<td><span style="${st};display:inline-block;width:20px;height:20px;line-height:20px;font-size:11px;font-weight:700">${ho.s}</span></td>`;
+                }).join('')}
+                <td class="col-subtotal">${f9||'—'}</td>
+                <td class="col-total">${b9||'—'}</td>
+                <td class="col-total ${ouColor(r.ou)}" style="font-weight:700;background:#e8e2d4">${r.ou!=null?ouFmt(r.ou):'—'}</td>
+              </tr>`;
+            }).join('')}
+            <!-- Fila de promedios -->
+            <tr style="border-top:2px solid var(--border)">
+              <td class="row-label" style="font-size:10px;font-weight:700">Prom.</td>
+              ${hNums.map(h=>`<td style="font-weight:600;color:var(--gold2)">${avg1(hs[h]?.shots||[])}</td>`).join('')}
+              <td class="col-subtotal"></td><td class="col-total"></td>
+              <td class="col-total" style="font-weight:700;background:#e8e2d4;color:var(--gold2)">${parseFloat(avgOu)>0?'+':''}${avgOu}</td>
+            </tr>
+          </tbody>
+        </table>
+        </div>
+      </div>
+
+      <!-- Stats por hoyo: Avg + Min + distribución -->
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div class="card" style="padding:0;overflow:hidden">
+          <div style="padding:12px 16px;border-bottom:1px solid var(--border)"><h3 style="margin:0">Estadísticas por hoyo</h3></div>
+          <div class="scorecard-wrap">
+          <table class="scorecard-tbl" style="font-size:11px">
+            <thead><tr>
+              <th style="text-align:left;padding-left:10px">Hoyo</th>
+              <th>Par</th><th>Prom.</th><th>Mín.</th>
+              <th style="background:#deeaf7;color:#006db3">🦅</th>
+              <th style="background:#fde8ea;color:#c0392b">🐦</th>
+              <th>Par</th>
+              <th style="background:#f0f0ee;color:#444">Bog</th>
+              <th style="background:#e8e4e0;color:#222">+2</th>
+              <th style="background:#e0dbd5;color:#111">+3</th>
+            </tr></thead>
+            <tbody>
+              ${hNums.map(h => `<tr>
+                <td style="color:var(--muted);text-align:left;padding-left:10px">${h}</td>
+                <td style="color:var(--muted)">${parByHole[h]||'—'}</td>
+                <td style="font-weight:600">${avg1(hs[h]?.shots||[])}</td>
+                <td style="color:var(--green2)">${min1(hs[h]?.shots||[])}</td>
+                <td style="background:#deeaf7;color:#006db3;font-weight:600">${hs[h]?.eagles||''}</td>
+                <td style="background:#fde8ea;color:#c0392b;font-weight:600">${hs[h]?.birdies||''}</td>
+                <td>${hs[h]?.pars||''}</td>
+                <td>${hs[h]?.bogeys||''}</td>
+                <td>${hs[h]?.doubles||''}</td>
+                <td>${hs[h]?.triples||''}</td>
+              </tr>`).join('')}
+              <tr style="border-top:2px solid var(--border);font-weight:700">
+                <td style="text-align:left;padding-left:10px">Total</td>
+                <td style="color:var(--muted)">${sumP(hNums)}</td>
+                <td></td><td></td>
+                <td style="background:#deeaf7;color:#006db3">${hNums.reduce((s,h)=>s+(hs[h]?.eagles||0),0)||''}</td>
+                <td style="background:#fde8ea;color:#c0392b">${hNums.reduce((s,h)=>s+(hs[h]?.birdies||0),0)||''}</td>
+                <td>${hNums.reduce((s,h)=>s+(hs[h]?.pars||0),0)||''}</td>
+                <td>${hNums.reduce((s,h)=>s+(hs[h]?.bogeys||0),0)||''}</td>
+                <td>${hNums.reduce((s,h)=>s+(hs[h]?.doubles||0),0)||''}</td>
+                <td>${hNums.reduce((s,h)=>s+(hs[h]?.triples||0),0)||''}</td>
+              </tr>
+            </tbody>
+          </table>
+          </div>
+        </div>
+
+        <!-- Par 3/4/5 -->
+        <div class="card" style="padding:14px">
+          <h3 style="margin-bottom:12px">Promedio por tipo</h3>
+          <table style="width:100%;font-size:12px;border-collapse:collapse">
+            <tr><th style="text-align:left;padding:4px 8px;color:var(--muted);font-size:10px">Par</th><th style="text-align:right;padding:4px 8px;color:var(--muted);font-size:10px">Prom.</th><th style="text-align:right;padding:4px 8px;color:var(--muted);font-size:10px">vs Par</th></tr>
+            ${[3,4,5].map(p=>{const a=pg[p];if(!a.length)return'';const av=(a.reduce((s,x)=>s+x,0)/a.length),diff=av-p;return `<tr style="border-top:1px solid var(--border)"><td style="padding:6px 8px;font-weight:700;color:var(--gold2)">Par ${p}</td><td style="text-align:right;padding:6px 8px;font-weight:600">${av.toFixed(2)}</td><td style="text-align:right;padding:6px 8px;color:${diff>0?'var(--red)':'var(--green2)';font-size:12px">${diff>0?'+':''}${diff.toFixed(2)}</td></tr>`;}).join('')}
+          </table>
         </div>
       </div>
     </div>
-    <div class="card">
-      <h3>Historial de vueltas</h3>
-      <div id="campo-rondas-list"></div>
-    </div>`;
-
-  setTimeout(()=>{
-    const ctx=document.getElementById('campo-chart-year');
-    if(ctx){if(ctx._ch)ctx._ch.destroy();ctx._ch=new Chart(ctx,{type:'bar',data:{labels:years,datasets:[{label:'S/Par',data:yearAvgs,backgroundColor:yearAvgs.map(v=>parseFloat(v)<=0?'#1e5e3a88':'#c0392b88'),borderRadius:3},{type:'line',label:'',data:yearAvgs,borderColor:'#9a6e1a',borderWidth:2,pointRadius:4,fill:false,tension:.3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'#d4cbb8'},ticks:{color:'#6b6454'}},y:{grid:{color:'#d4cbb8'},ticks:{color:'#6b6454'}}}}});}
-  },100);
-
-  const listEl=document.getElementById('campo-rondas-list');
-  listEl.innerHTML=rondas.map((r,i)=>{
-    const hs=HOLES_DATA[r.id]||[];
-    const f9=hs.filter(h=>h.h<=9).reduce((s,h)=>s+h.s,0);
-    const b9=hs.filter(h=>h.h>9).reduce((s,h)=>s+h.s,0);
-    const scoreRow=holeNums.map(h=>{const hole=hs.find(x=>x.h===h);if(!hole)return '<td>—</td>';const par=parByHole[h],d=par?hole.s-par:null,color=d===null?'':d<=-2?'color:#006db3':d===-1?'color:#c0392b':d===0?'color:#888':d===1?'color:#6b5a3e':'color:#3d2810';return `<td style="font-weight:600;${color}">${hole.s}</td>`;}).join('');
-    return `<div class="campo-ronda">
-      <div class="campo-ronda-header" onclick="toggleRonda('ronda-${i}')">
-        <span style="color:var(--muted);font-size:11px">${r.date}</span>
-        <div style="display:flex;gap:16px;align-items:center">
-          ${f9?`<span style="font-size:11px;color:var(--muted)">Out:${f9}</span>`:''}
-          ${b9?`<span style="font-size:11px;color:var(--muted)">In:${b9}</span>`:''}
-          <span class="${ouColor(r.ou)}" style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700">${r.ou!=null?ouFmt(r.ou):'—'}</span>
-        </div>
-      </div>
-      ${hs.length?`<div class="campo-ronda-holes" id="ronda-${i}"><table>
-        <tr><th>H</th>${holeNums.map(h=>`<th>${h}</th>`).join('')}</tr>
-        <tr><td style="color:var(--muted)">Par</td>${holeNums.map(h=>`<td style="color:var(--muted)">${parByHole[h]||'—'}</td>`).join('')}</tr>
-        <tr><td>Score</td>${scoreRow}</tr>
-      </table></div>`:''}
-    </div>`;
-  }).join('');
+    ` : `<div class="card"><p style="color:var(--muted)">⚠️ Ejecuta <code>update_holes.py</code> y sube <code>data/holes.json</code> a GitHub para ver el scorecard detallado.</p>
+    <div style="margin-top:12px">
+      <table style="width:100%;font-size:13px;border-collapse:collapse">
+        <thead><tr><th style="text-align:left;padding:6px;border-bottom:1px solid var(--border)">Fecha</th><th style="padding:6px;border-bottom:1px solid var(--border)">S/Par</th><th style="padding:6px;border-bottom:1px solid var(--border)">Score</th></tr></thead>
+        <tbody>${rondas.map(r=>`<tr><td style="padding:6px;color:var(--muted)">${r.date}</td><td style="padding:6px;text-align:center" class="${ouColor(r.ou)}">${r.ou!=null?ouFmt(r.ou):'—'}</td><td style="padding:6px;text-align:center">${r.shots||'—'}</td></tr>`).join('')}</tbody>
+      </table>
+    </div></div>`}
+  `;
 }
+
 
 function toggleRonda(id){const el=document.getElementById(id);if(el)el.classList.toggle('open');}
 
