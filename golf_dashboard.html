@@ -295,6 +295,70 @@ tr.excluded-row td:last-child { text-decoration: none; }
 .excl-bar button:hover { background: var(--red); color: #fff; }
 
 
+
+/* ── MI CAMPO ────────────────────────────────────────────────── */
+.campo-selector {
+  display: flex; gap: 12px; align-items: center; margin-bottom: 24px; flex-wrap: wrap;
+}
+.campo-selector select {
+  flex: 1; min-width: 200px; max-width: 400px;
+  background: var(--card); border: 2px solid var(--gold2);
+  color: var(--text); padding: 10px 14px; border-radius: 6px;
+  font-family: 'Cormorant Garamond', serif; font-size: 18px;
+  cursor: pointer;
+}
+.campo-selector select:focus { outline: none; border-color: var(--gold); }
+
+/* Scorecard tabla estilo tradicional */
+.scorecard-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.scorecard-tbl { border-collapse: collapse; font-size: 12px; min-width: 700px; width: 100%; }
+.scorecard-tbl th, .scorecard-tbl td {
+  padding: 6px 8px; text-align: center; border: 1px solid var(--border);
+  min-width: 32px;
+}
+.scorecard-tbl thead th { background: var(--card2); color: var(--muted); font-size: 10px; text-transform: uppercase; }
+.scorecard-tbl .row-label { text-align: left; font-size: 11px; color: var(--muted); background: var(--card2); white-space: nowrap; padding-left: 10px; }
+.scorecard-tbl .row-par td { background: #e8f4ee; color: #1e5e3a; font-weight: 700; }
+.scorecard-tbl .row-avg td { background: var(--card); font-weight: 600; color: var(--text); }
+.scorecard-tbl .row-min td { background: var(--card2); color: var(--green2); }
+.scorecard-tbl .row-eagle td { background: #deeaf7; color: #006db3; }
+.scorecard-tbl .row-birdie td { background: #fde8ea; color: #c0392b; }
+.scorecard-tbl .row-bogey td { background: #f5f0e8; color: #6b5a3e; }
+.scorecard-tbl .col-subtotal { background: var(--card2) !important; font-weight: 700; }
+.scorecard-tbl .col-total { background: #e8e2d4 !important; font-weight: 700; }
+
+/* Historial de vueltas del campo */
+.campo-ronda { 
+  display: grid; gap: 2px; margin-bottom: 8px;
+  border: 1px solid var(--border); border-radius: 6px; overflow: hidden;
+}
+.campo-ronda-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 12px; background: var(--card2); cursor: pointer;
+  font-size: 12px;
+}
+.campo-ronda-header:hover { background: var(--border); }
+.campo-ronda-score { font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 700; }
+.campo-ronda-holes { overflow: hidden; max-height: 0; transition: max-height .3s ease; }
+.campo-ronda-holes.open { max-height: 200px; }
+.campo-ronda-holes table { width: 100%; font-size: 11px; border-collapse: collapse; }
+.campo-ronda-holes td, .campo-ronda-holes th { padding: 4px 6px; text-align: center; border-right: 1px solid var(--border); }
+.campo-ronda-holes tr:first-child { background: var(--card2); }
+
+/* Placeholder cuando no hay campo seleccionado */
+.campo-placeholder {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 60px 20px; color: var(--muted); text-align: center;
+}
+.campo-placeholder .ph-icon { font-size: 48px; margin-bottom: 16px; }
+.campo-placeholder p { font-size: 14px; }
+
+@media (max-width: 768px) {
+  .campo-selector select { font-size: 15px; }
+  .scorecard-tbl { font-size: 11px; }
+  .scorecard-tbl th, .scorecard-tbl td { padding: 4px 5px; min-width: 26px; }
+}
+
 </style>
 </head>
 <body>
@@ -321,6 +385,9 @@ tr.excluded-row td:last-child { text-decoration: none; }
     <div class="nav-link" id="nav-detail" onclick="showPage('detail',this)" style="display:none">
       <span class="icon">◎</span> Detalle Vuelta
     </div>
+    <div class="nav-link" onclick="showPage('micampo',this)">
+      <span class="icon">⛳</span> Mi Campo
+    </div>
     <div class="nav-link" onclick="showPage('bests',this)">
       <span class="icon">★</span> Personal Bests
     </div>
@@ -344,6 +411,9 @@ tr.excluded-row td:last-child { text-decoration: none; }
   </div>
   <div class="bottom-nav-item" onclick="showPage('courses',this);syncBottomNav(this)">
     <span class="icon">⊕</span><span>Campos</span>
+  </div>
+  <div class="bottom-nav-item" onclick="showPage('micampo',this);syncBottomNav(this)">
+    <span class="icon">⛳</span><span>Campo</span>
   </div>
   <div class="bottom-nav-item" onclick="showPage('bests',this);syncBottomNav(this)">
     <span class="icon">★</span><span>Bests</span>
@@ -547,6 +617,25 @@ tr.excluded-row td:last-child { text-decoration: none; }
     <div id="detail-no-holes" class="card" style="display:none">
       <p style="color:var(--muted)">⚠️ Datos de hoyo a hoyo no disponibles para esta vuelta.<br>
       Ejecuta <code style="color:var(--gold)">python update_holes.py</code> en tu carpeta para cargarlos.</p>
+    </div>
+  </div>
+
+  <!-- MI CAMPO -->
+  <div id="page-micampo" class="page">
+    <div class="page-header">
+      <h2>Mi Campo</h2>
+      <p>Historial y estadísticas por campo</p>
+    </div>
+    <div class="campo-selector">
+      <select id="campo-select" onchange="loadCampo(this.value)">
+        <option value="">— Selecciona un campo —</option>
+      </select>
+    </div>
+    <div id="campo-content">
+      <div class="campo-placeholder">
+        <div class="ph-icon">⛳</div>
+        <p>Selecciona un campo para ver tu historial</p>
+      </div>
     </div>
   </div>
 
@@ -1018,6 +1107,7 @@ function showPage(name, el) {
   document.getElementById('page-'+name).classList.add('active');
   if(el)el.classList.add('active');
   if(name==='rounds')   renderRounds();
+  if(name==='micampo')  initMiCampo();
   if(name==='trends')   initTrends();
   if(name==='courses')  initCourses();
   if(name==='bests')    initBests();
