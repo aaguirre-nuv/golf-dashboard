@@ -1124,6 +1124,70 @@ function showPage(name, el) {
   if(name==='bests')    initBests();
 }
 
+
+// ── MI CAMPO ─────────────────────────────────────────────────────
+let _campoList = [];
+
+function initMiCampo() {
+  if (_campoList.length) return;
+  const campoCount = {};
+  // Incluir todos los campos de D18 Arccos, con o sin HOLES_DATA
+  D18.forEach(r => {
+    if (r.src) return;
+    campoCount[r.course] = (campoCount[r.course]||0) + 1;
+  });
+  _campoList = Object.entries(campoCount)
+    .sort((a,b) => b[1]-a[1])
+    .map(([name, count]) => ({name, count}));
+}
+
+function filterCampos(q) {
+  const list = document.getElementById('campo-list');
+  if (!q || !q.trim()) { list.style.display='none'; return; }
+  initMiCampo();
+  const matches = _campoList.filter(c => c.name.toLowerCase().includes(q.toLowerCase()));
+  if (!matches.length) {
+    list.style.display = 'block';
+    list.innerHTML = '<div style="padding:12px 16px;color:var(--muted);font-size:13px">Sin resultados</div>';
+    return;
+  }
+  list.style.display = 'block';
+  list.innerHTML = matches.slice(0,15).map(c => {
+    const safe = c.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    return `<div onclick="selectCampo('${safe}')"
+      style="padding:10px 16px;cursor:pointer;border-bottom:1px solid var(--border);
+             display:flex;justify-content:space-between;align-items:center;font-size:14px"
+      onmouseover="this.style.background='var(--card2)'" onmouseout="this.style.background=''">
+      <span>${c.name}</span>
+      <span style="color:var(--muted);font-size:12px">${c.count} vuelta${c.count>1?'s':''}</span>
+    </div>`;
+  }).join('');
+}
+
+function selectCampo(name) {
+  document.getElementById('campo-search').value = name;
+  document.getElementById('campo-list').style.display = 'none';
+  const label = document.getElementById('campo-selected-label');
+  document.getElementById('campo-selected-name').textContent = name;
+  if (label) label.style.display = 'flex';
+  loadCampo(name);
+}
+
+function clearCampo() {
+  document.getElementById('campo-search').value = '';
+  const label = document.getElementById('campo-selected-label');
+  if (label) label.style.display = 'none';
+  document.getElementById('campo-content').innerHTML =
+    '<div class="campo-placeholder"><div class="ph-icon">⛳</div><p>Busca un campo para ver tu historial</p></div>';
+}
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('#campo-search') && !e.target.closest('#campo-list')) {
+    const l = document.getElementById('campo-list');
+    if (l) l.style.display = 'none';
+  }
+});
+
 // ── INIT ──────────────────────────────────────────────────────────
 async function init() {
   const loadDiv = document.createElement('div');
