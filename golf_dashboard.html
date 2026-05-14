@@ -1132,8 +1132,8 @@ function initMiCampo() {
   if (_campoList.length) return;
   const campoCount = {};
   // Incluir todos los campos de D18 Arccos, con o sin HOLES_DATA
-  D18.forEach(r => {
-    if (r.src) return;
+  // Incluir todas las vueltas de 18H (Arccos + Excel)
+  DATA.filter(r => r.holes >= 17 && r.holes <= 18).forEach(r => {
     campoCount[r.course] = (campoCount[r.course]||0) + 1;
   });
   _campoList = Object.entries(campoCount)
@@ -1181,7 +1181,9 @@ function loadCampo(courseName) {
     return;
   }
 
-  const rondas  = D18.filter(r => r.course===courseName && !r.src).sort((a,b)=>b.date.localeCompare(a.date));
+  // Todas las vueltas de 18H para este campo (Arccos + Excel)
+  const rondas  = DATA.filter(r => r.course===courseName && r.holes>=17 && r.holes<=18)
+    .sort((a,b)=>b.date.localeCompare(a.date));
   const rondasH = rondas.filter(r => HOLES_DATA[r.id]);
   if (!rondas.length) {
     content.innerHTML = '<div class="campo-placeholder"><div class="ph-icon">📊</div><p>Sin vueltas registradas</p></div>';
