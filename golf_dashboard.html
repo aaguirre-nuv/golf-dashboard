@@ -359,6 +359,63 @@ tr.excluded-row td:last-child { text-decoration: none; }
   .scorecard-tbl th, .scorecard-tbl td { padding: 4px 5px; min-width: 26px; }
 }
 
+
+/* ── MI BOLSA ────────────────────────────────────────────────── */
+.bolsa-selector {
+  display: flex; gap: 10px; align-items: center; margin-bottom: 20px; flex-wrap: wrap;
+}
+.bolsa-btn {
+  padding: 7px 16px; border-radius: 20px; border: 1.5px solid var(--border);
+  background: var(--card); color: var(--muted); cursor: pointer;
+  font-family: inherit; font-size: 12px; transition: all .2s;
+}
+.bolsa-btn.active { background: var(--gold2); color: #fff; border-color: var(--gold2); }
+.bolsa-btn:hover:not(.active) { border-color: var(--gold2); color: var(--gold2); }
+
+.club-row {
+  display: flex; align-items: center; gap: 12px; padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.club-badge {
+  width: 48px; height: 48px; border-radius: 8px; background: var(--green2);
+  color: #fff; display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 13px; flex-shrink: 0; text-align: center;
+  line-height: 1.1;
+}
+.club-badge.retired { background: var(--card2); color: var(--muted); }
+.club-info { flex: 1; min-width: 0; }
+.club-name { font-weight: 700; font-size: 13px; color: var(--text); }
+.club-model { font-size: 11px; color: var(--muted); margin-top: 1px; }
+.club-bar-wrap { flex: 2; display: flex; flex-direction: column; gap: 3px; }
+.club-bar-row { display: flex; align-items: center; gap: 8px; }
+.club-bar-label { width: 50px; font-size: 10px; color: var(--muted); text-align: right; flex-shrink: 0; }
+.club-bar-track { flex: 1; background: var(--card2); border-radius: 3px; height: 10px; position: relative; }
+.club-bar-fill { height: 10px; border-radius: 3px; transition: width .4s; }
+.club-bar-fill.bar-actual   { background: var(--green2); }
+.club-bar-fill.bar-historico { background: var(--gold2); opacity: .6; }
+.club-dist { width: 48px; font-weight: 700; font-size: 14px; text-align: right; flex-shrink: 0; }
+.club-delta { width: 40px; font-size: 11px; text-align: right; flex-shrink: 0; }
+.club-shots { width: 45px; font-size: 10px; color: var(--muted); text-align: right; flex-shrink: 0; }
+
+.gapping-chart { margin-top: 8px; }
+.gapping-row {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 4px;
+}
+.gapping-label { width: 40px; font-size: 11px; font-weight: 700; text-align: right; }
+.gapping-bar-wrap { flex: 1; position: relative; height: 20px; }
+.gapping-bar {
+  position: absolute; height: 20px; border-radius: 4px;
+  display: flex; align-items: center; padding: 0 6px;
+  font-size: 11px; font-weight: 700; color: #fff; white-space: nowrap;
+  transition: all .4s;
+}
+.gapping-dist { width: 40px; font-size: 11px; text-align: left; color: var(--muted); }
+
+@media (max-width: 768px) {
+  .club-bar-wrap { display: none; }
+  .club-dist { font-size: 16px; }
+}
+
 </style>
 </head>
 <body>
@@ -384,6 +441,9 @@ tr.excluded-row td:last-child { text-decoration: none; }
     </div>
     <div class="nav-link" id="nav-detail" onclick="showPage('detail',this)" style="display:none">
       <span class="icon">◎</span> Detalle Vuelta
+    </div>
+    <div class="nav-link" onclick="showPage('mibolsa',this)">
+      <span class="icon">🏌</span> Mi Bolsa
     </div>
     <div class="nav-link" onclick="showPage('micampo',this)">
       <span class="icon">⛳</span> Mi Campo
@@ -411,6 +471,9 @@ tr.excluded-row td:last-child { text-decoration: none; }
   </div>
   <div class="bottom-nav-item" onclick="showPage('courses',this);syncBottomNav(this)">
     <span class="icon">⊕</span><span>Campos</span>
+  </div>
+  <div class="bottom-nav-item" onclick="showPage('mibolsa',this);syncBottomNav(this)">
+    <span class="icon">🏌</span><span>Bolsa</span>
   </div>
   <div class="bottom-nav-item" onclick="showPage('micampo',this);syncBottomNav(this)">
     <span class="icon">⛳</span><span>Campo</span>
@@ -647,6 +710,23 @@ tr.excluded-row td:last-child { text-decoration: none; }
         <div class="ph-icon">⛳</div>
         <p>Busca un campo para ver tu historial</p>
       </div>
+    </div>
+  </div>
+
+  <!-- MI BOLSA -->
+  <div id="page-mibolsa" class="page">
+    <div class="page-header">
+      <h2>Mi Bolsa</h2>
+      <p>Smart Distances por palo</p>
+    </div>
+    <div class="bolsa-selector">
+      <span style="font-size:12px;color:var(--muted)">Ventana:</span>
+      <button class="bolsa-btn active" onclick="setBolsaWindow('all',this)">Todo el historial</button>
+      <button class="bolsa-btn" onclick="setBolsaWindow('year',this)">Último año</button>
+      <button class="bolsa-btn" onclick="setBolsaWindow('20',this)">Últimas 20 vueltas</button>
+    </div>
+    <div id="bolsa-content">
+      <div class="campo-placeholder"><div class="ph-icon">🏌</div><p>Cargando datos de palos...</p></div>
     </div>
   </div>
 
@@ -1119,6 +1199,7 @@ function showPage(name, el) {
   if(el)el.classList.add('active');
   if(name==='rounds')   renderRounds();
   if(name==='micampo')  initMiCampo();
+  if(name==='mibolsa')  initMiBolsa();
   if(name==='trends')   initTrends();
   if(name==='courses')  initCourses();
   if(name==='bests')    initBests();
@@ -1445,6 +1526,158 @@ document.addEventListener('click', e => {
     if (l) l.style.display = 'none';
   }
 });
+
+
+// ── MI BOLSA ──────────────────────────────────────────────────────
+let PALOS_DATA = null;
+let _bolsaWindow = 'all';
+
+async function initMiBolsa() {
+  if (PALOS_DATA) { renderBolsa(); return; }
+  try {
+    PALOS_DATA = await (await fetch('data/palos.json')).json();
+    renderBolsa();
+  } catch(e) {
+    document.getElementById('bolsa-content').innerHTML =
+      '<div class="campo-placeholder"><div class="ph-icon">⚠️</div><p>Ejecuta <code>update_palos.py</code> y sube <code>data/palos.json</code> a GitHub.</p></div>';
+  }
+}
+
+function setBolsaWindow(w, el) {
+  _bolsaWindow = w;
+  document.querySelectorAll('.bolsa-btn').forEach(b => b.classList.remove('active'));
+  if (el) el.classList.add('active');
+  renderBolsa();
+}
+
+function smartDist(shots, window) {
+  let filtered = shots;
+  const now = new Date();
+
+  if (window === 'year') {
+    const cutoff = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate()).toISOString().slice(0,10);
+    filtered = shots.filter(s => s[1] >= cutoff);
+  } else if (window === '20') {
+    // Obtener las fechas de las últimas 20 vueltas del jugador
+    const last20dates = [...new Set(D18.slice(0,20).map(r=>r.date))].sort().reverse();
+    const cutoff = last20dates[last20dates.length-1] || '2000-01-01';
+    filtered = shots.filter(s => s[1] >= cutoff);
+  }
+
+  if (!filtered.length) return null;
+  const dists = filtered.map(s => s[0]).sort((a,b) => a-b);
+  const n = dists.length;
+  if (n < 3) return Math.round(dists.reduce((a,b)=>a+b,0)/n);
+  const cut = Math.max(1, Math.floor(n * 0.15));
+  const trimmed = dists.slice(cut, n - cut);
+  return Math.round(trimmed.reduce((a,b)=>a+b,0) / trimmed.length);
+}
+
+function renderBolsa() {
+  if (!PALOS_DATA) return;
+  const content = document.getElementById('bolsa-content');
+
+  // Separar activos y retirados
+  const activos  = Object.values(PALOS_DATA).filter(p => p.active && p.name !== 'Putter' && p.name !== '4i' && p.name !== 'T4');
+  const retirados = Object.values(PALOS_DATA).filter(p => !p.active && p.name !== 'Putter');
+
+  // Calcular distancias para la ventana seleccionada
+  const calcDist = p => {
+    const curr = smartDist(p.shots, _bolsaWindow);
+    const all  = smartDist(p.shots, 'all');
+    const delta = (curr != null && all != null) ? curr - all : null;
+    return { curr: curr || all, all, delta, n: p.shots.length };
+  };
+
+  const activosData = activos.map(p => ({ ...p, ...calcDist(p) }))
+    .filter(p => p.curr).sort((a,b) => b.curr - a.curr);
+
+  const maxDist = activosData[0]?.curr || 220;
+
+  // Tabla de palos activos
+  const renderClub = (p, isRetired=false) => {
+    const pct = Math.round((p.curr / maxDist) * 100);
+    const pctAll = p.all ? Math.round((p.all / maxDist) * 100) : pct;
+    const deltaStr = p.delta != null
+      ? `<span style="color:${p.delta>0?'var(--green2)':p.delta<0?'var(--red)':'var(--muted)'}">${p.delta>0?'+':''}${p.delta}m</span>`
+      : '';
+    const badgeStyle = isRetired ? 'retired' : '';
+    return `<div class="club-row">
+      <div class="club-badge ${badgeStyle}">${p.name}</div>
+      <div class="club-info">
+        <div class="club-name">${p.make}</div>
+        <div class="club-model">${p.model}</div>
+      </div>
+      <div class="club-bar-wrap">
+        <div class="club-bar-row">
+          <div class="club-bar-label">Actual</div>
+          <div class="club-bar-track">
+            <div class="club-bar-fill bar-actual" style="width:${pct}%"></div>
+          </div>
+        </div>
+        ${_bolsaWindow!=='all' && p.all ? `<div class="club-bar-row">
+          <div class="club-bar-label">Histórico</div>
+          <div class="club-bar-track">
+            <div class="club-bar-fill bar-historico" style="width:${pctAll}%"></div>
+          </div>
+        </div>` : ''}
+      </div>
+      <div class="club-dist">${p.curr}m</div>
+      ${_bolsaWindow!=='all' ? `<div class="club-delta">${deltaStr}</div>` : '<div class="club-delta"></div>'}
+      <div class="club-shots">${p.n} golpes</div>
+    </div>`;
+  };
+
+  // Gráfica de gapping
+  const gapMin = activosData[activosData.length-1]?.curr || 60;
+  const gapMax = maxDist;
+  const gapRange = gapMax - gapMin + 20;
+  const gapColors = ['#1e5e3a','#2d7a52','#3d9068','#4da67e','#5cb894','#6dcba8','#7ed8bb',
+                     '#9a6e1a','#b88020','#c99030','#d9a040','#e9b050','#f0c060','#e8c870'];
+
+  const gappingHtml = activosData.map((p, i) => {
+    const left = Math.round(((p.curr - gapMin) / gapRange) * 85);
+    const width = Math.max(5, Math.round((p.curr / gapMax) * 60));
+    return `<div class="gapping-row">
+      <div class="gapping-label">${p.name}</div>
+      <div class="gapping-bar-wrap">
+        <div class="gapping-bar" style="left:${left}%;background:${gapColors[i%gapColors.length]}">
+          ${p.curr}m
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  content.innerHTML = `
+    <div class="card" style="margin-bottom:16px">
+      <h3>Palos activos · Smart Distance${_bolsaWindow==='all'?'':_bolsaWindow==='year'?' (último año)':' (últimas 20 vueltas)'}</h3>
+      <div style="display:flex;gap:6px;font-size:10px;color:var(--muted);margin-bottom:12px">
+        <span style="display:inline-flex;align-items:center;gap:4px"><span style="width:12px;height:6px;background:var(--green2);border-radius:2px;display:inline-block"></span>Actual</span>
+        ${_bolsaWindow!=='all'?'<span style="display:inline-flex;align-items:center;gap:4px"><span style="width:12px;height:6px;background:var(--gold2);opacity:.6;border-radius:2px;display:inline-block"></span>Histórico</span>':''}
+      </div>
+      ${activosData.map(p => renderClub(p, false)).join('')}
+    </div>
+
+    <div class="card" style="margin-bottom:16px">
+      <h3>Gapping visual</h3>
+      <p style="font-size:11px;color:var(--muted);margin-bottom:12px">Distancias de mayor a menor — busca huecos o solapamientos</p>
+      <div class="gapping-chart">${gappingHtml}</div>
+    </div>
+
+    ${retirados.length ? `
+    <details style="margin-top:8px">
+      <summary style="cursor:pointer;color:var(--muted);font-size:12px;padding:8px 0">
+        Palos retirados (${retirados.length})
+      </summary>
+      <div class="card" style="margin-top:8px">
+        ${retirados.map(p => {
+          const d = calcDist(p);
+          return renderClub({...p, ...d, curr: d.all, delta: null}, true);
+        }).filter(Boolean).join('')}
+      </div>
+    </details>` : ''}
+  `;
+}
 
 // ── INIT ──────────────────────────────────────────────────────────
 async function init() {
