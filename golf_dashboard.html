@@ -436,6 +436,9 @@ tr.excluded-row td:last-child { text-decoration: none; }
     <div class="nav-link" onclick="showPage('trends',this)">
       <span class="icon">↗</span> Tendencias
     </div>
+    <div class="nav-link" onclick="showPage('handicap',this)">
+      <span class="icon">◈</span> Hándicap
+    </div>
     <div class="nav-link" onclick="showPage('courses',this)">
       <span class="icon">⊕</span> Campos
     </div>
@@ -468,6 +471,9 @@ tr.excluded-row td:last-child { text-decoration: none; }
   </div>
   <div class="bottom-nav-item" onclick="showPage('trends',this);syncBottomNav(this)">
     <span class="icon">↗</span><span>Tendencias</span>
+  </div>
+  <div class="bottom-nav-item" onclick="showPage('handicap',this);syncBottomNav(this)">
+    <span class="icon">◈</span><span>HM</span>
   </div>
   <div class="bottom-nav-item" onclick="showPage('courses',this);syncBottomNav(this)">
     <span class="icon">⊕</span><span>Campos</span>
@@ -727,6 +733,123 @@ tr.excluded-row td:last-child { text-decoration: none; }
     </div>
     <div id="bolsa-content">
       <div class="campo-placeholder"><div class="ph-icon">🏌</div><p>Cargando datos de palos...</p></div>
+    </div>
+  </div>
+
+
+  <!-- HÁNDICAP MUNDIAL -->
+  <div id="page-handicap" class="page">
+    <div class="page-header">
+      <h2>Hándicap Mundial</h2>
+      <p id="hcp-sub">Sistema WHS · cargando...</p>
+    </div>
+    <div class="kpi-grid" id="hcp-kpis" style="margin-bottom:20px"></div>
+    <div class="card-grid" style="margin-bottom:16px">
+
+      <!-- Tabla 20 vueltas -->
+      <div class="card" style="padding:0;overflow:hidden">
+        <div style="padding:14px 18px;border-bottom:1px solid var(--border);
+                    display:flex;align-items:center;justify-content:space-between">
+          <h3 style="margin:0">20 Vueltas contables</h3>
+          <span style="font-size:11px;color:var(--muted)">
+            <span style="display:inline-block;width:10px;height:10px;background:#1e5e3a;
+                          border-radius:2px;margin-right:4px"></span>Top 8 computan
+          </span>
+        </div>
+        <div class="scroll-table" style="max-height:560px">
+          <table style="width:100%;border-collapse:collapse;font-size:12px">
+            <thead><tr>
+              <th style="padding:7px 8px;background:var(--card2);color:var(--muted);font-size:10px;border-bottom:1px solid var(--border);position:sticky;top:0;text-align:center">#</th>
+              <th style="padding:7px 8px;background:var(--card2);color:var(--muted);font-size:10px;border-bottom:1px solid var(--border);position:sticky;top:0">Fecha</th>
+              <th style="padding:7px 8px;background:var(--card2);color:var(--muted);font-size:10px;border-bottom:1px solid var(--border);position:sticky;top:0">Campo</th>
+              <th style="padding:7px 8px;background:var(--card2);color:var(--muted);font-size:10px;border-bottom:1px solid var(--border);position:sticky;top:0;text-align:center">Bruto</th>
+              <th style="padding:7px 8px;background:var(--card2);color:var(--muted);font-size:10px;border-bottom:1px solid var(--border);position:sticky;top:0;text-align:center">Stb</th>
+              <th style="padding:7px 8px;background:var(--card2);color:var(--muted);font-size:10px;border-bottom:1px solid var(--border);position:sticky;top:0;text-align:center">Dif.</th>
+              <th style="padding:7px 8px;background:var(--card2);color:var(--muted);font-size:10px;border-bottom:1px solid var(--border);position:sticky;top:0;text-align:center">Rk</th>
+            </tr></thead>
+            <tbody id="hcp-rounds-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Simulador -->
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div class="card" style="padding:18px">
+          <h3 style="margin-bottom:14px">Simulador próxima vuelta</h3>
+          <div style="margin-bottom:10px">
+            <label style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);display:block;margin-bottom:4px">Campo</label>
+            <input id="sim-campo-search" type="text" placeholder="Buscar campo..."
+              oninput="filterSimCampos(this.value)"
+              style="width:100%;padding:8px 12px;border:1.5px solid var(--border);border-radius:5px;
+                     background:var(--card2);color:var(--text);font-family:inherit;font-size:13px;box-sizing:border-box">
+            <div id="sim-campo-list" style="display:none;border:1px solid var(--border);border-top:none;
+                 border-radius:0 0 5px 5px;background:var(--card);max-height:200px;overflow-y:auto;
+                 box-shadow:0 4px 10px rgba(0,0,0,.1);font-size:12px;position:relative;z-index:50"></div>
+          </div>
+          <div style="margin-bottom:10px">
+            <label style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);display:block;margin-bottom:4px">Barra</label>
+            <select id="sim-tee" onchange="updateSimulator()"
+              style="width:100%;padding:8px 12px;border:1.5px solid var(--border);border-radius:5px;
+                     background:var(--card2);color:var(--text);font-family:inherit;font-size:13px">
+              <option value="">— selecciona campo primero —</option>
+            </select>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+            <div>
+              <label style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);display:block;margin-bottom:4px">Resultado bruto</label>
+              <input id="sim-gross" type="number" min="55" max="120" placeholder="ej. 82"
+                oninput="updateSimulator()"
+                style="width:100%;padding:8px 12px;border:1.5px solid var(--border);border-radius:5px;
+                       background:var(--card2);color:var(--text);font-family:inherit;font-size:16px;
+                       font-weight:700;box-sizing:border-box">
+            </div>
+            <div>
+              <label style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);display:block;margin-bottom:4px">Diferencial</label>
+              <div id="sim-dif" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:5px;
+                   background:var(--card);font-size:16px;font-weight:700;color:var(--muted);min-height:38px;line-height:22px">—</div>
+            </div>
+          </div>
+          <div id="sim-campo-info" style="font-size:11px;color:var(--muted);padding:8px 12px;
+               background:var(--card2);border-radius:5px;display:none;
+               grid-template-columns:1fr 1fr 1fr;gap:4px;text-align:center;margin-bottom:12px">
+            <div><div style="font-weight:700;color:var(--text)" id="sim-par">—</div><div>Par</div></div>
+            <div><div style="font-weight:700;color:var(--text)" id="sim-vc">—</div><div>Vc</div></div>
+            <div><div style="font-weight:700;color:var(--text)" id="sim-vs">—</div><div>Vs</div></div>
+          </div>
+          <div id="sim-result-box" style="display:none;border-radius:8px;padding:14px;
+               text-align:center;background:var(--card2);border:2px solid var(--border)">
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:8px">Nuevo HM proyectado</div>
+            <div style="display:flex;align-items:center;justify-content:center;gap:16px">
+              <div><div style="font-size:10px;color:var(--muted)">Actual</div>
+                <div id="sim-hcp-current" style="font-family:'Cormorant Garamond',serif;font-size:34px;font-weight:700;color:var(--muted)">—</div></div>
+              <div style="font-size:20px;color:var(--muted)">→</div>
+              <div><div style="font-size:10px;color:var(--muted)">Proyectado</div>
+                <div id="sim-hcp-new" style="font-family:'Cormorant Garamond',serif;font-size:34px;font-weight:700;color:var(--gold2)">—</div></div>
+              <div><div style="font-size:10px;color:var(--muted)">Variación</div>
+                <div id="sim-hcp-delta" style="font-family:'Cormorant Garamond',serif;font-size:34px;font-weight:700">—</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="card" style="padding:0;overflow:hidden;flex:1">
+          <div style="padding:12px 16px;border-bottom:1px solid var(--border)">
+            <h3 style="margin:0;font-size:16px">HM esperado según resultado</h3>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px" id="sim-tabla-sub">Selecciona campo y barra</div>
+          </div>
+          <div style="overflow-y:auto;max-height:320px">
+            <table style="width:100%;border-collapse:collapse;font-size:12px">
+              <thead><tr>
+                <th style="padding:7px 10px;background:var(--card2);color:var(--muted);font-size:10px;text-align:center;position:sticky;top:0">Bruto</th>
+                <th style="padding:7px 10px;background:var(--card2);color:var(--muted);font-size:10px;text-align:center;position:sticky;top:0">Dif.</th>
+                <th style="padding:7px 10px;background:var(--card2);color:var(--muted);font-size:10px;text-align:center;position:sticky;top:0">HM nuevo</th>
+                <th style="padding:7px 10px;background:var(--card2);color:var(--muted);font-size:10px;text-align:center;position:sticky;top:0">Δ HM</th>
+              </tr></thead>
+              <tbody id="sim-tbody">
+                <tr><td colspan="4" style="text-align:center;color:var(--muted);padding:20px;font-size:12px">Selecciona un campo para ver la tabla</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1201,6 +1324,7 @@ function showPage(name, el) {
   if(name==='micampo')  initMiCampo();
   if(name==='mibolsa')  initMiBolsa();
   if(name==='trends')   initTrends();
+  if(name==='handicap') initHandicap();
   if(name==='courses')  initCourses();
   if(name==='bests')    initBests();
 }
@@ -1722,6 +1846,227 @@ async function init() {
 }
 
 init();
+
+// ── HÁNDICAP MUNDIAL ──────────────────────────────────────────────
+let HCP_DATA   = null;
+let CAMPOS_SIM = null;
+let _simCampoIdx = null;
+
+async function initHandicap() {
+  if (HCP_DATA) { renderHandicap(); return; }
+  try {
+    const [hd, cs] = await Promise.all([
+      fetch('data/handicap_rounds.json').then(r => r.json()),
+      fetch('data/campos_simulator.json').then(r => r.json()),
+    ]);
+    HCP_DATA = hd; CAMPOS_SIM = cs;
+    renderHandicap();
+  } catch(e) {
+    console.error('Error handicap:', e);
+    const el = document.getElementById('hcp-sub');
+    if (el) el.textContent = 'Error — ejecuta build_handicap_data.py y sube los JSON a data/';
+  }
+}
+
+function renderHandicap() {
+  const d = HCP_DATA;
+  const currentHcp = d.currentHcp;
+  const counting   = d.rounds.filter(r => r.counting);
+  const best8avg   = d.best8Difs.length
+    ? (d.best8Difs.reduce((a,b)=>a+b,0)/d.best8Difs.length).toFixed(1) : '—';
+
+  const subEl = document.getElementById('hcp-sub');
+  if (subEl) subEl.textContent = 'Sistema WHS · '+d.nWithDif+' vueltas con diferencial desde nov 2020';
+
+  const kpis = [
+    {label:'Hándicap actual', val:currentHcp!=null?currentHcp.toFixed(1):'—', sub:'RFEG oficial'},
+    {label:'Mínimo 12 meses', val:d.lowest12m!=null?d.lowest12m.toFixed(1):'—', sub:'Mejor reciente'},
+    {label:'Base cálculo',    val:best8avg,  sub:'Avg 8 mejores dif.'},
+    {label:'Mejor dif.',      val:d.best8Difs.length?d.best8Difs[0].toFixed(1):'—', sub:'De las 20 contables'},
+    {label:'Vueltas WHS',     val:d.nWithDif, sub:'Con diferencial válido'},
+  ];
+  const kpisEl = document.getElementById('hcp-kpis');
+  if (kpisEl) kpisEl.innerHTML = kpis.map(k =>
+    '<div class="kpi"><div class="kpi-label">'+k.label+'</div>'+
+    '<div class="kpi-val">'+k.val+'</div>'+
+    '<div class="kpi-sub">'+k.sub+'</div></div>').join('');
+
+  // Tabla de vueltas
+  const tbody = document.getElementById('hcp-rounds-tbody');
+  if (!tbody) return;
+  let rows = d.rounds.slice(0, 40).map(r => {
+    const isBest  = r.inBest8;
+    const isCount = r.counting;
+    const difNum  = r.diferencial;
+    const dif     = difNum != null ? difNum.toFixed(1) : '—';
+    const difColor = difNum==null?'var(--muted)':difNum<=7?'#1e5e3a':difNum<=10?'#9a6e1a':'#c0392b';
+    const rowBg   = isBest ? 'background:linear-gradient(90deg,#e8f4ee,transparent)'
+                   : !isCount ? 'opacity:.5' : '';
+    const campo   = (r.campo||r.event||'').replace(/^TORNEO\s+/i,'').substring(0,30);
+    return '<tr style="'+rowBg+';border-bottom:1px solid var(--border)">'+
+      '<td style="padding:6px 8px;text-align:center;color:'+(isBest?'#1e5e3a':'var(--muted)')+
+        ';font-weight:'+(isBest?700:400)+';">'+(isBest?'★':r.n)+'</td>'+
+      '<td style="padding:6px 8px;color:var(--muted);font-size:11px">'+r.date+'</td>'+
+      '<td style="padding:6px 8px;max-width:160px;overflow:hidden;text-overflow:ellipsis;'+
+        'white-space:nowrap" title="'+(r.campo||r.event||'')+'">'+campo+'</td>'+
+      '<td style="padding:6px 8px;text-align:center">'+(r.gross||'—')+'</td>'+
+      '<td style="padding:6px 8px;text-align:center">'+(r.stableford||'—')+'</td>'+
+      '<td style="padding:6px 8px;text-align:center;font-weight:700;color:'+difColor+'">'+dif+'</td>'+
+      '<td style="padding:6px 8px;text-align:center">'+
+        (isBest?'<span style="background:#1e5e3a;color:#fff;border-radius:3px;padding:1px 5px;font-size:10px">'+r.ranking+'</span>':
+         isCount?'<span style="color:var(--muted)">'+(r.ranking||'—')+'</span>':
+         '<span style="color:var(--muted);font-size:10px">—</span>')+'</td></tr>';
+  });
+  tbody.innerHTML = rows.join('');
+
+  // Separador entre contables e históricas
+  const allRows = tbody.querySelectorAll('tr');
+  if (allRows[20]) {
+    allRows[20].insertAdjacentHTML('beforebegin',
+      '<tr><td colspan="7" style="background:var(--card2);color:var(--muted);font-size:10px;'+
+      'text-align:center;padding:4px;letter-spacing:.5px;text-transform:uppercase">'+
+      '— Historial anterior (no computan) —</td></tr>');
+  }
+}
+
+// ── SIMULADOR ─────────────────────────────────────────────────────
+
+function filterSimCampos(q) {
+  const list = document.getElementById('sim-campo-list');
+  if (!q || !CAMPOS_SIM) { list.style.display='none'; return; }
+  const matches = CAMPOS_SIM
+    .map((c,i) => ({...c, idx:i}))
+    .filter(c => c.name.toLowerCase().includes(q.toLowerCase()))
+    .slice(0, 15);
+  if (!matches.length) { list.style.display='none'; return; }
+  list.style.display = 'block';
+  list.innerHTML = matches.map(c => {
+    const safe = c.name.replace(/'/g, "\\'");
+    return '<div onclick="selectSimCampo('+c.idx+',\''+safe+'\')"'+
+      ' style="padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--border);'+
+      'display:flex;justify-content:space-between"'+
+      ' onmouseover="this.style.background=\'var(--card2)\'"'+
+      ' onmouseout="this.style.background=\'\'">'+
+      '<span>'+c.name+'</span>'+
+      '<span style="color:var(--muted);font-size:11px">'+c.tees.length+' barra'+(c.tees.length>1?'s':'')+'</span></div>';
+  }).join('');
+}
+
+function selectSimCampo(idx, name) {
+  _simCampoIdx = idx;
+  document.getElementById('sim-campo-search').value = name;
+  document.getElementById('sim-campo-list').style.display = 'none';
+  const campo = CAMPOS_SIM[idx];
+  const teeEl = document.getElementById('sim-tee');
+  teeEl.innerHTML = campo.tees.map((t,i) =>
+    '<option value="'+i+'">'+t.tee+' · Par '+(t.par||'?')+' · Vc '+t.vc+' · Vs '+t.vs+'</option>'
+  ).join('');
+  updateSimulator();
+}
+
+function calcProjectedHcp(rounds20, newDif, lowest12m) {
+  const difs = rounds20.map(r => r.diferencial);
+  if (difs.length >= 20) difs.splice(19, 1);
+  difs.unshift(newDif);
+  const sorted = [...difs].sort((a,b) => a-b);
+  let avg = sorted.slice(0,8).reduce((a,b)=>a+b,0)/8;
+  if (lowest12m != null) {
+    const soft = lowest12m + 3.0;
+    if (avg > soft) avg = soft + (avg - soft) / 2;
+    if (avg > lowest12m + 5.0) avg = lowest12m + 5.0;
+  }
+  return Math.round(avg * 10) / 10;
+}
+
+function updateSimulator() {
+  if (_simCampoIdx == null || !HCP_DATA) return;
+  const campo   = CAMPOS_SIM[_simCampoIdx];
+  const teeIdx  = parseInt(document.getElementById('sim-tee').value);
+  const tee     = campo.tees[isNaN(teeIdx) ? 0 : teeIdx];
+  const gross   = parseInt(document.getElementById('sim-gross').value);
+
+  // Info del campo
+  const infoEl = document.getElementById('sim-campo-info');
+  if (infoEl) { infoEl.style.display='grid'; }
+  const parEl=document.getElementById('sim-par'), vcEl=document.getElementById('sim-vc'), vsEl=document.getElementById('sim-vs');
+  if (parEl) parEl.textContent = tee.par||'—';
+  if (vcEl)  vcEl.textContent  = tee.vc||'—';
+  if (vsEl)  vsEl.textContent  = tee.vs||'—';
+
+  // Diferencial
+  const difEl = document.getElementById('sim-dif');
+  const dif = (tee.vc && tee.vs && gross) ? (gross - tee.vc) * 113 / tee.vs : null;
+  if (difEl) {
+    difEl.textContent = dif != null ? dif.toFixed(1) : '—';
+    difEl.style.color = dif==null?'var(--muted)':dif<=7?'#1e5e3a':dif<=10?'#9a6e1a':'#c0392b';
+  }
+
+  const counting  = HCP_DATA.rounds.filter(r => r.counting);
+  const lowest12m = HCP_DATA.lowest12m;
+  const curHcp    = HCP_DATA.currentHcp;
+
+  if (dif != null && gross && counting.length >= 8) {
+    const newHcp = calcProjectedHcp(counting, dif, lowest12m);
+    const delta  = newHcp - curHcp;
+    const resBox = document.getElementById('sim-result-box');
+    if (resBox) resBox.style.display = 'block';
+    const curEl   = document.getElementById('sim-hcp-current');
+    const newEl   = document.getElementById('sim-hcp-new');
+    const deltaEl = document.getElementById('sim-hcp-delta');
+    if (curEl)   curEl.textContent   = curHcp.toFixed(1);
+    if (newEl) { newEl.textContent   = newHcp.toFixed(1);
+                 newEl.style.color   = newHcp<curHcp?'#1e5e3a':newHcp>curHcp?'#c0392b':'var(--gold2)'; }
+    if (deltaEl) { deltaEl.textContent = (delta>0?'+':'')+delta.toFixed(1);
+                   deltaEl.style.color = delta<-0.05?'#1e5e3a':delta>0.05?'#c0392b':'var(--muted)'; }
+  }
+
+  // Tabla esperado
+  buildSimTable(tee, counting, lowest12m, curHcp, gross);
+  document.getElementById('sim-campo-list').style.display = 'none';
+}
+
+function buildSimTable(tee, counting, lowest12m, curHcp, grossActual) {
+  const tbody = document.getElementById('sim-tbody');
+  const subEl = document.getElementById('sim-tabla-sub');
+  if (!tee || !counting || counting.length < 8) return;
+  if (subEl) subEl.textContent = tee.tee+' · Vc '+tee.vc+' · Vs '+tee.vs+' · Par '+(tee.par||'?');
+  const par  = tee.par || 72;
+  const rows = [];
+  for (let g = par-5; g <= par+22; g++) {
+    if (!tee.vc || !tee.vs) continue;
+    const dif    = (g - tee.vc) * 113 / tee.vs;
+    const newHcp = calcProjectedHcp(counting, dif, lowest12m);
+    const delta  = newHcp - curHcp;
+    const isCurr = g === grossActual;
+    rows.push({g, dif, newHcp, delta, isCurr});
+  }
+  tbody.innerHTML = rows.map(r => {
+    const difColor = r.dif<=7?'#1e5e3a':r.dif<=10?'#9a6e1a':'#c0392b';
+    const dStr     = (r.delta>0?'+':'')+r.delta.toFixed(1);
+    const dColor   = r.delta<-0.05?'#1e5e3a':r.delta>0.05?'#c0392b':'var(--muted)';
+    const hl       = r.isCurr?'background:linear-gradient(90deg,#fff8e8,transparent);font-weight:700;':'';
+    return '<tr style="'+hl+'border-bottom:1px solid var(--border)">'+
+      '<td style="padding:6px 10px;text-align:center">'+(r.isCurr?'▶ ':'')+r.g+
+        (r.g===par?' <span style="font-size:9px;color:var(--muted)">(P)</span>':'')+'</td>'+
+      '<td style="padding:6px 10px;text-align:center;color:'+difColor+';font-weight:600">'+r.dif.toFixed(1)+'</td>'+
+      '<td style="padding:6px 10px;text-align:center;font-family:\'Cormorant Garamond\',serif;font-size:15px;'+
+        'font-weight:700;color:'+(r.delta<-0.05?'#1e5e3a':r.delta>0.05?'#c0392b':'var(--text)')+'">'+r.newHcp.toFixed(1)+'</td>'+
+      '<td style="padding:6px 10px;text-align:center;color:'+dColor+';font-size:11px">'+dStr+'</td></tr>';
+  }).join('');
+  setTimeout(() => {
+    const curr = tbody.querySelector('tr[style*="fff8e8"]');
+    if (curr) curr.scrollIntoView({block:'center', behavior:'smooth'});
+  }, 100);
+}
+
+// Cerrar dropdown simulador al clic fuera
+document.addEventListener('click', e => {
+  if (!e.target.closest('#sim-campo-search') && !e.target.closest('#sim-campo-list')) {
+    const l = document.getElementById('sim-campo-list');
+    if (l) l.style.display = 'none';
+  }
+});
+
 
 </script>
 </body>
