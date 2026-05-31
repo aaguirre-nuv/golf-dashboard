@@ -1560,7 +1560,7 @@ function loadCampo(courseName) {
     const fwTot   = hNums.reduce((s,h)=>s+hs[h].fwT,0);
     const fwN     = hNums.reduce((s,h)=>s+hs[h].fwN,0);
     const allPuts = hNums.flatMap(h=>hs[h].putts);
-    return \`
+    return `
     <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:12px">
       <div class="mc-hole-grid-hdr">
         <div>H</div><div>Par</div><div>Prom.</div><div>Mín.</div>
@@ -1577,7 +1577,7 @@ function loadCampo(courseName) {
         const putAvg=d.putts.length?(d.putts.reduce((a,b)=>a+b,0)/d.putts.length).toFixed(1):'—';
         const girColor=d.girT?(d.girN/d.girT>=0.5?'color:var(--green2)':'color:var(--muted)'):'color:var(--muted)';
         const fwColor=d.fwT?(d.fwN/d.fwT>=0.5?'color:var(--green2)':'color:var(--muted)'):'color:var(--muted)';
-        return \`<div class="mc-hole-grid">
+        return `<div class="mc-hole-grid">
           <div style="color:var(--muted)">\${h}</div>
           <div style="color:var(--muted)">\${parByHole[h]||'—'}</div>
           <div><span class="\${cls}">\${av}</span></div>
@@ -1590,7 +1590,7 @@ function loadCampo(courseName) {
           <div style="color:var(--muted);font-size:11px">\${d.pars||''}</div>
           <div style="color:var(--muted);font-size:11px">\${d.bogeys||''}</div>
           <div style="color:var(--gold2);font-size:11px">\${d.doubles||''}</div>
-        </div>\`;
+        </div>`;
       }).join('')}
       <div class="mc-hole-grid-ftr">
         <div>Tot</div><div style="color:var(--muted)">\${sumP(hNums)}</div>
@@ -1608,7 +1608,7 @@ function loadCampo(courseName) {
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;font-size:10px;color:var(--muted)">
       <span><span style="background:#1e5e3a;color:#fff;border-radius:3px;padding:1px 4px">▲1</span> mejor hoyo</span>
       <span><span style="background:#8b1a0a;color:#fff;border-radius:3px;padding:1px 4px">▼1</span> peor hoyo</span>
-    </div>\`;
+    </div>`;
   };
 
   const mcRoundsHTML = () => rondas.map((r,idx)=>{
@@ -1625,30 +1625,30 @@ function loadCampo(courseName) {
     const fwH=hd.filter(h=>parByHole[h.h]>=4&&h.fw===1), fwT=hd.filter(h=>parByHole[h.h]>=4);
     const girPct=girT?Math.round(girN/girT*100):null;
     const fwPct=fwT.length?Math.round(fwH.length/fwT.length*100):null;
-    const renderHalf=(holes,lbl,subtot,par9)=>\`
+    const renderHalf=(holes,lbl,subtot,par9)=>`
       <div class="mc-sc-half">
         <div class="mc-sc-label">\${lbl}</div>
         <div class="mc-sc-holes">
-          \${holes.map(h=>\`<div class="mc-sc-hole">
+          \${holes.map(h=>`<div class="mc-sc-hole">
             <div class="mc-sc-hnum">\${h.h}</div>
             <div class="mc-sc-score \${mcScoreClass(h.s,parByHole[h.h])}">\${h.s}</div>
             <div class="mc-sc-hpar">\${parByHole[h.h]||''}</div>
-          </div>\`).join('')}
+          </div>`).join('')}
           <div class="mc-sc-subtot">
             <div class="mc-sc-hnum">\${lbl==='Salida'?'Out':'In'}</div>
             <div class="mc-sc-subtot-val">\${subtot}</div>
             <div class="mc-sc-hpar">\${par9}</div>
           </div>
         </div>
-      </div>\`;
-    return \`<div class="mc-round-card" id="mcr-\${idx}">
+      </div>`;
+    return `<div class="mc-round-card" id="mcr-\${idx}">
       <div class="mc-round-header" onclick="toggleMcRound(\${idx})">
         <span class="mc-round-date">\${r.date}</span>
         <div class="mc-round-pills">
-          \${hd.length?[\`<div class="mc-pill"><span class="mc-pill-label">Golpes</span><span class="mc-pill-val">\${total||r.shots||'—'}</span></div>\`,
-            girPct!=null?\`<div class="mc-pill"><span class="mc-pill-label">GIR</span><span class="mc-pill-val" style="color:\${girPct>=50?'var(--green2)':'var(--muted)'}">\${girPct}%</span></div>\`:'',
-            fwPct!=null?\`<div class="mc-pill"><span class="mc-pill-label">Cal.</span><span class="mc-pill-val" style="color:\${fwPct>=50?'var(--green2)':'var(--muted)'}">\${fwPct}%</span></div>\`:'',
-          ].join(''):\`<div class="mc-pill"><span class="mc-pill-label">Golpes</span><span class="mc-pill-val">\${r.shots||'—'}</span></div>\`}
+          \${hd.length?[`<div class="mc-pill"><span class="mc-pill-label">Golpes</span><span class="mc-pill-val">\${total||r.shots||'—'}</span></div>`,
+            girPct!=null?`<div class="mc-pill"><span class="mc-pill-label">GIR</span><span class="mc-pill-val" style="color:\${girPct>=50?'var(--green2)':'var(--muted)'}">\${girPct}%</span></div>`:'',
+            fwPct!=null?`<div class="mc-pill"><span class="mc-pill-label">Cal.</span><span class="mc-pill-val" style="color:\${fwPct>=50?'var(--green2)':'var(--muted)'}">\${fwPct}%</span></div>`:'',
+          ].join(''):`<div class="mc-pill"><span class="mc-pill-label">Golpes</span><span class="mc-pill-val">\${r.shots||'—'}</span></div>`}
           <div class="mc-pill" style="background:transparent">
             <span class="mc-pill-label">S/Par</span>
             <span class="mc-pill-val \${ouCls}">\${r.ou!=null?(r.ou>0?'+':'')+r.ou:'—'}</span>
@@ -1657,7 +1657,7 @@ function loadCampo(courseName) {
         <span class="mc-chevron">▼</span>
       </div>
       <div class="mc-scorecard-body" id="mcsb-\${idx}">
-        \${hd.length?\`<div class="mc-sc-grid">
+        \${hd.length?`<div class="mc-sc-grid">
           \${renderHalf(f9,'Salida',f9tot,sumP(front))}
           \${renderHalf(b9,'Vuelta',b9tot,sumP(back))}
           <div class="mc-sc-total">
@@ -1665,9 +1665,9 @@ function loadCampo(courseName) {
             <span class="mc-sc-total-val \${ouCls}">\${r.ou!=null?(r.ou>0?'+':'')+r.ou:'—'}</span>
             <span style="color:var(--muted);font-size:12px">\${total} golpes</span>
           </div>
-        </div>\`:\`<div style="padding:12px 14px;color:var(--muted);font-size:12px;font-style:italic">Sin datos de hoyo a hoyo</div>\`}
+        </div>`:`<div style="padding:12px 14px;color:var(--muted);font-size:12px;font-style:italic">Sin datos de hoyo a hoyo</div>`}
       </div>
-    </div>\`;
+    </div>`;
   }).join('');
 
   // ── RENDER FINAL (mobile-first) ──
