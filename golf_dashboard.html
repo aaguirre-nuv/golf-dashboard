@@ -1670,79 +1670,60 @@ function loadCampo(courseName) {
     </div>`;
   }).join('');
 
-  // ── RENDER FINAL (mobile-first) ──
+  // ── RENDER FINAL ──
   const ouCls2 = v => v<0?'ou-neg':v===0?'ou-par':'ou-pos';
-  content.innerHTML = `
-    <!-- KPIs -->
+
+  let holesSection = '';
+  if (hasHoles) {
+    const pg3 = pg[3].length ? (() => { const av=pg[3].reduce((s,x)=>s+x,0)/pg[3].length, diff=av-3; return `<div class="kpi" style="padding:12px 8px;text-align:center"><div class="kpi-label">Par 3</div><div class="kpi-val" style="font-size:24px">${av.toFixed(2)}</div><div class="kpi-sub" style="color:${diff>0?'var(--red)':'var(--green2)'};font-weight:700">${diff>0?'+':''}${diff.toFixed(2)}</div><div class="kpi-sub">${pg[3].length} hoyos</div></div>`; })() : '<div class="kpi" style="padding:12px 8px;text-align:center"><div class="kpi-label">Par 3</div><div class="kpi-val" style="font-size:24px">—</div></div>';
+    const pg4 = pg[4].length ? (() => { const av=pg[4].reduce((s,x)=>s+x,0)/pg[4].length, diff=av-4; return `<div class="kpi" style="padding:12px 8px;text-align:center"><div class="kpi-label">Par 4</div><div class="kpi-val" style="font-size:24px">${av.toFixed(2)}</div><div class="kpi-sub" style="color:${diff>0?'var(--red)':'var(--green2)'};font-weight:700">${diff>0?'+':''}${diff.toFixed(2)}</div><div class="kpi-sub">${pg[4].length} hoyos</div></div>`; })() : '<div class="kpi" style="padding:12px 8px;text-align:center"><div class="kpi-label">Par 4</div><div class="kpi-val" style="font-size:24px">—</div></div>';
+    const pg5 = pg[5].length ? (() => { const av=pg[5].reduce((s,x)=>s+x,0)/pg[5].length, diff=av-5; return `<div class="kpi" style="padding:12px 8px;text-align:center"><div class="kpi-label">Par 5</div><div class="kpi-val" style="font-size:24px">${av.toFixed(2)}</div><div class="kpi-sub" style="color:${diff>0?'var(--red)':'var(--green2)'};font-weight:700">${diff>0?'+':''}${diff.toFixed(2)}</div><div class="kpi-sub">${pg[5].length} hoyos</div></div>`; })() : '<div class="kpi" style="padding:12px 8px;text-align:center"><div class="kpi-label">Par 5</div><div class="kpi-val" style="font-size:24px">—</div></div>';
+
+    holesSection = `
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
-      <div class="kpi" style="padding:12px 10px;text-align:center">
-        <div class="kpi-label">Vueltas</div>
-        <div class="kpi-val" style="font-size:28px">${rondas.length}</div>
-        <div class="kpi-sub">${rondasH.length} con scorecard</div>
-      </div>
-      <div class="kpi" style="padding:12px 10px;text-align:center">
-        <div class="kpi-label">Prom. S/Par</div>
-        <div class="kpi-val" style="font-size:28px;color:${parseFloat(avgOu)<=0?'var(--green2)':'var(--red)'}">${parseFloat(avgOu)>0?'+':''}${avgOu}</div>
-        <div class="kpi-sub">scoring avg</div>
-      </div>
-      <div class="kpi" style="padding:12px 10px;text-align:center">
-        <div class="kpi-label">Mejor</div>
-        <div class="kpi-val" style="font-size:28px" class="${ouCls2(bestOu)}">${bestOu>0?'+':''}${bestOu}</div>
-        <div class="kpi-sub">${bestR?.date||''}</div>
-      </div>
+      ${pg3}${pg4}${pg5}
     </div>
-
-    <!-- Tabla por año -->
-    <div class="card" style="padding:14px;margin-bottom:12px;overflow-x:auto">
-      <table style="width:100%;font-size:12px;border-collapse:collapse;white-space:nowrap">
-        <tr><td></td>${years.map(y=>`<th style="padding:4px 10px;color:var(--muted);font-size:11px;text-align:center">${y}</th>`).join('')}<th style="padding:4px 10px;color:var(--gold2);font-size:11px">Total</th></tr>
-        <tr><td style="color:var(--muted);font-size:11px;padding:4px 6px"># Vueltas</td>${years.map(y=>`<td style="text-align:center;padding:4px 10px">${byYear[y].n}</td>`).join('')}<td style="font-weight:700;text-align:center;padding:4px 10px">${rondas.length}</td></tr>
-        <tr><td style="color:var(--muted);font-size:11px;padding:4px 6px">S/Par avg</td>${years.map(y=>{const o=byYear[y].ous;const v=o.length?(o.reduce((a,b)=>a+b,0)/o.length).toFixed(1):'—';return `<td style="text-align:center;padding:4px 10px;color:${parseFloat(v)<=0?'var(--green2)':'var(--red)'}">${parseFloat(v)>0?'+':''}${v}</td>`;}).join('')}<td style="font-weight:700;text-align:center;padding:4px 10px;color:${parseFloat(avgOu)<=0?'var(--green2)':'var(--red)'}">${parseFloat(avgOu)>0?'+':''}${avgOu}</td></tr>
-      </table>
-    </div>
-
-    ${hasHoles ? `
-    <!-- Promedio por tipo -->
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
-      ${[3,4,5].map(p=>{
-        const a=pg[p]; if(!a.length) return `<div class="kpi" style="padding:12px 8px;text-align:center"><div class="kpi-label">Par ${p}</div><div class="kpi-val" style="font-size:24px">—</div></div>`;
-        const av=a.reduce((s,x)=>s+x,0)/a.length, diff=av-p;
-        return `<div class="kpi" style="padding:12px 8px;text-align:center">
-          <div class="kpi-label">Par ${p}</div>
-          <div class="kpi-val" style="font-size:24px">${av.toFixed(2)}</div>
-          <div class="kpi-sub" style="color:${diff>0?'var(--red)':'var(--green2)'};font-weight:700">${diff>0?'+':''}${diff.toFixed(2)}</div>
-          <div class="kpi-sub">${a.length} hoyos</div>
-        </div>`;
-      }).join('')}
-    </div>
-
-    <!-- Gráfica S/Par por año -->
     <div class="card" style="padding:12px;margin-bottom:12px;height:170px;position:relative">
       <div style="font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--gold2);margin-bottom:6px">S/Par por año</div>
       <canvas id="campo-chart-year" style="height:130px"></canvas>
     </div>
-
-    <!-- Stats por hoyo -->
     <div style="font-family:'Cormorant Garamond',serif;font-size:17px;color:var(--gold2);margin-bottom:8px">Estadísticas por hoyo</div>
     ${mcHoleStatsHTML()}
-
-    <!-- Scorecard por vuelta -->
     <div style="font-family:'Cormorant Garamond',serif;font-size:17px;color:var(--gold2);margin-bottom:8px">Scorecard por vuelta</div>
-    ${mcRoundsHTML()}
-
-    ` : `
-    <!-- Sin datos de hoyo -->
+    ${mcRoundsHTML()}`;
+  } else {
+    holesSection = `
     <div class="card" style="margin-bottom:12px">
       <p style="color:var(--muted)">⚠️ Ejecuta <code>update_holes.py</code> y sube <code>data/holes.json</code> a GitHub para ver el scorecard.</p>
       <div style="margin-top:12px">
         <table style="width:100%;font-size:13px;border-collapse:collapse">
           <thead><tr><th style="text-align:left;padding:6px;border-bottom:1px solid var(--border)">Fecha</th><th style="padding:6px;border-bottom:1px solid var(--border)">S/Par</th></tr></thead>
-          <tbody>${rondas.map(r=>`<tr><td style="padding:6px;color:var(--muted)">${r.date}</td><td style="padding:6px;text-align:center" class="${ouCls2(r.ou)}">${r.ou!=null?ouFmt(r.ou):'—'}</td></tr>`).join('')}</tbody>
+          <tbody>${rondas.map(r=>'<tr><td style="padding:6px;color:var(--muted)">'+r.date+'</td><td style="padding:6px;text-align:center" class="'+ouCls2(r.ou)+'">'+(r.ou!=null?ouFmt(r.ou):'—')+'</td></tr>').join('')}</tbody>
         </table>
       </div>
-    </div>
-    `}
-  `;
+    </div>`;
+  }
+
+  const yearTableRows = years.map(y => {
+    const o = byYear[y].ous;
+    const v = o.length ? (o.reduce((a,b)=>a+b,0)/o.length).toFixed(1) : '—';
+    return '<td style="text-align:center;padding:4px 10px;color:' + (parseFloat(v)<=0?'var(--green2)':'var(--red)') + '">' + (parseFloat(v)>0?'+':'') + v + '</td>';
+  }).join('');
+
+  content.innerHTML =
+    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">' +
+      '<div class="kpi" style="padding:12px 10px;text-align:center"><div class="kpi-label">Vueltas</div><div class="kpi-val" style="font-size:28px">' + rondas.length + '</div><div class="kpi-sub">' + rondasH.length + ' con scorecard</div></div>' +
+      '<div class="kpi" style="padding:12px 10px;text-align:center"><div class="kpi-label">Prom. S/Par</div><div class="kpi-val" style="font-size:28px;color:' + (parseFloat(avgOu)<=0?'var(--green2)':'var(--red)') + '">' + (parseFloat(avgOu)>0?'+':'') + avgOu + '</div><div class="kpi-sub">scoring avg</div></div>' +
+      '<div class="kpi" style="padding:12px 10px;text-align:center"><div class="kpi-label">Mejor</div><div class="kpi-val" style="font-size:28px">' + (bestOu>0?'+':'') + bestOu + '</div><div class="kpi-sub">' + (bestR ? bestR.date : '') + '</div></div>' +
+    '</div>' +
+    '<div class="card" style="padding:14px;margin-bottom:12px;overflow-x:auto">' +
+      '<table style="width:100%;font-size:12px;border-collapse:collapse;white-space:nowrap">' +
+        '<tr><td></td>' + years.map(y=>'<th style="padding:4px 10px;color:var(--muted);font-size:11px;text-align:center">'+y+'</th>').join('') + '<th style="padding:4px 10px;color:var(--gold2);font-size:11px">Total</th></tr>' +
+        '<tr><td style="color:var(--muted);font-size:11px;padding:4px 6px"># Vueltas</td>' + years.map(y=>'<td style="text-align:center;padding:4px 10px">'+byYear[y].n+'</td>').join('') + '<td style="font-weight:700;text-align:center;padding:4px 10px">'+rondas.length+'</td></tr>' +
+        '<tr><td style="color:var(--muted);font-size:11px;padding:4px 6px">S/Par avg</td>' + yearTableRows + '<td style="font-weight:700;text-align:center;padding:4px 10px;color:' + (parseFloat(avgOu)<=0?'var(--green2)':'var(--red)') + '">' + (parseFloat(avgOu)>0?'+':'') + avgOu + '</td></tr>' +
+      '</table>' +
+    '</div>' +
+    holesSection;
 
   setTimeout(()=>{
     const ctx=document.getElementById('campo-chart-year');
