@@ -297,19 +297,8 @@ tr.excluded-row td:last-child { text-decoration: none; }
 
 
 /* ── MI CAMPO ────────────────────────────────────────────────── */
-.campo-selector {
-  display: flex; gap: 12px; align-items: center; margin-bottom: 24px; flex-wrap: wrap;
-}
-.campo-selector select {
-  flex: 1; min-width: 200px; max-width: 400px;
-  background: var(--card); border: 2px solid var(--gold2);
-  color: var(--text); padding: 10px 14px; border-radius: 6px;
-  font-family: 'Cormorant Garamond', serif; font-size: 18px;
-  cursor: pointer;
-}
-.campo-selector select:focus { outline: none; border-color: var(--gold); }
 
-/* Scorecard tabla estilo tradicional */
+/* Scorecard tabla estilo tradicional (desktop) */
 .scorecard-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 .scorecard-tbl { border-collapse: collapse; font-size: 12px; min-width: 700px; width: 100%; }
 .scorecard-tbl th, .scorecard-tbl td {
@@ -359,6 +348,82 @@ tr.excluded-row td:last-child { text-decoration: none; }
   .scorecard-tbl th, .scorecard-tbl td { padding: 4px 5px; min-width: 26px; }
 }
 
+
+
+/* ── MI CAMPO MÓVIL — hole stats grid ── */
+.mc-hole-grid {
+  display: grid;
+  grid-template-columns: 26px 24px 36px 30px 32px 32px 32px 24px 24px 24px 24px 24px;
+  gap: 0; padding: 6px 6px; border-bottom: 1px solid var(--border);
+  font-size: 11px; align-items: center;
+}
+.mc-hole-grid-hdr {
+  display: grid;
+  grid-template-columns: 26px 24px 36px 30px 32px 32px 32px 24px 24px 24px 24px 24px;
+  gap: 0; padding: 7px 6px; background: var(--card2);
+  border-bottom: 1px solid var(--border); font-size: 9px;
+  text-transform: uppercase; letter-spacing: .3px; color: var(--muted);
+}
+.mc-hole-grid > *, .mc-hole-grid-hdr > * { text-align: center; white-space: nowrap; }
+.mc-hole-grid > *:first-child, .mc-hole-grid-hdr > *:first-child { text-align: left; }
+.mc-hole-grid-ftr {
+  display: grid;
+  grid-template-columns: 26px 24px 36px 30px 32px 32px 32px 24px 24px 24px 24px 24px;
+  gap: 0; padding: 7px 6px; background: var(--card2);
+  border-top: 2px solid var(--border); font-size: 11px; font-weight: 700; color: var(--gold2);
+}
+.mc-avg-best1 { background:#1e5e3a; color:#fff; border-radius:4px; padding:2px 4px; font-weight:700; font-size:10px; }
+.mc-avg-best2 { background:#2d7a52; color:#fff; border-radius:4px; padding:2px 4px; font-weight:700; font-size:10px; }
+.mc-avg-best3 { background:#5a9e7a; color:#fff; border-radius:4px; padding:2px 4px; font-weight:700; font-size:10px; }
+.mc-avg-best4 { background:#c8e6d8; color:#1e5e3a; border-radius:4px; padding:2px 4px; font-weight:600; font-size:10px; }
+.mc-avg-worst1 { background:#8b1a0a; color:#fff; border-radius:4px; padding:2px 4px; font-weight:700; font-size:10px; }
+.mc-avg-worst2 { background:#c0392b; color:#fff; border-radius:4px; padding:2px 4px; font-weight:700; font-size:10px; }
+.mc-avg-worst3 { background:#e07070; color:#fff; border-radius:4px; padding:2px 4px; font-weight:700; font-size:10px; }
+.mc-avg-worst4 { background:#fdddd9; color:#8b1a0a; border-radius:4px; padding:2px 4px; font-weight:600; font-size:10px; }
+.mc-avg-neutral { font-weight:600; }
+.mc-round-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 10px; overflow: hidden; margin-bottom: 8px;
+}
+.mc-round-header {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 14px; cursor: pointer; user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.mc-round-header:active { background: var(--card2); }
+.mc-round-date { font-size: 12px; color: var(--muted); flex-shrink: 0; }
+.mc-round-pills { display: flex; align-items: center; gap: 5px; flex: 1; justify-content: flex-end; }
+.mc-pill {
+  display: flex; flex-direction: column; align-items: center;
+  background: var(--card2); border-radius: 6px; padding: 3px 7px; min-width: 38px;
+}
+.mc-pill-label { font-size: 8px; text-transform: uppercase; letter-spacing: .4px; color: var(--muted); line-height: 1; }
+.mc-pill-val { font-size: 13px; font-weight: 700; line-height: 1.3; color: var(--text); }
+.mc-pill-val.neg { color: var(--green2); }
+.mc-pill-val.pos { color: var(--red); }
+.mc-chevron { color: var(--muted); font-size: 12px; transition: transform .25s; flex-shrink: 0; }
+.mc-round-card.open .mc-chevron { transform: rotate(180deg); }
+.mc-scorecard-body { max-height: 0; overflow: hidden; transition: max-height .3s ease; }
+.mc-round-card.open .mc-scorecard-body { max-height: 500px; }
+.mc-sc-grid { padding: 0 10px 12px; }
+.mc-sc-half { margin-bottom: 8px; }
+.mc-sc-label { font-size: 9px; text-transform: uppercase; letter-spacing: .7px; color: var(--muted); margin-bottom: 4px; padding-left: 2px; }
+.mc-sc-holes { display: flex; gap: 3px; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.mc-sc-holes::-webkit-scrollbar { display: none; }
+.mc-sc-hole { flex: 0 0 auto; width: 30px; text-align: center; }
+.mc-sc-hnum { font-size: 9px; color: var(--muted); margin-bottom: 2px; }
+.mc-sc-hpar { font-size: 9px; color: var(--muted); margin-top: 2px; }
+.mc-sc-score { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; border-radius: 3px; margin: 0 auto; }
+.mc-s-eagle  { background: #006db3; color: #fff; border-radius: 50%; }
+.mc-s-birdie { background: #e8192c; color: #fff; border-radius: 50%; }
+.mc-s-par    { color: #555; }
+.mc-s-bogey  { background: #1a1a1a; color: #fff; }
+.mc-s-double { background: #1a1a1a; color: #fff; outline: 2px solid #555; outline-offset: 1px; }
+.mc-s-unknown { color: var(--muted); }
+.mc-sc-subtot { flex: 0 0 auto; width: 34px; text-align: center; }
+.mc-sc-subtot-val { width: 32px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; background: var(--card2); border-radius: 3px; margin: 0 auto; color: var(--gold2); }
+.mc-sc-total { display: flex; justify-content: flex-end; align-items: center; gap: 8px; padding: 0 2px; font-size: 12px; color: var(--muted); }
+.mc-sc-total-val { font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 700; }
 
 /* ── MI BOLSA ────────────────────────────────────────────────── */
 .bolsa-selector {
@@ -1386,7 +1451,9 @@ function loadCampo(courseName) {
     return;
   }
 
-  // Todas las vueltas de 18H para este campo (Arccos + Excel)
+  const isMobile = window.innerWidth <= 768;
+
+  // Todas las vueltas de 18H para este campo
   const rondas  = DATA.filter(r => r.course===courseName && r.holes>=17 && r.holes<=18)
     .sort((a,b)=>b.date.localeCompare(a.date));
   const rondasH = rondas.filter(r => HOLES_DATA[r.id]);
@@ -1405,13 +1472,16 @@ function loadCampo(courseName) {
   const front = hNums.filter(h=>h<=9);
   const back  = hNums.filter(h=>h>9);
 
-  // Stats por hoyo
+  // Stats por hoyo — ahora con putts, gir, fw
   const hs = {};
-  hNums.forEach(h=>{ hs[h]={shots:[],eagles:0,birdies:0,pars:0,bogeys:0,doubles:0,triples:0}; });
+  hNums.forEach(h=>{ hs[h]={shots:[],putts:[],girN:0,girT:0,fwN:0,fwT:0,eagles:0,birdies:0,pars:0,bogeys:0,doubles:0,triples:0}; });
   rondasH.forEach(r=>{
     (HOLES_DATA[r.id]||[]).forEach(h=>{
       if(!hs[h.h]||!h.s) return;
       hs[h.h].shots.push(h.s);
+      if(h.p!=null) hs[h.h].putts.push(h.p);
+      if(h.gir!=null){ hs[h.h].girT++; if(h.gir) hs[h.h].girN++; }
+      if(parByHole[h.h]>=4 && h.fw!=null){ hs[h.h].fwT++; if(h.fw===1) hs[h.h].fwN++; }
       const p=parByHole[h.h]; if(!p) return;
       const d=h.s-p;
       if(d<=-2)hs[h.h].eagles++; else if(d===-1)hs[h.h].birdies++;
@@ -1424,28 +1494,31 @@ function loadCampo(courseName) {
   const min1 = a => a.length?Math.min(...a):'—';
   const sumP = arr => arr.reduce((s,h)=>s+(parByHole[h]||0),0);
 
-  // Ranking de hoyos por promedio vs par (solo hoyos con datos)
+  // Ranking hoyos por promedio vs par
   const holeRanking = hNums
     .filter(h => hs[h]?.shots?.length > 0 && parByHole[h])
     .map(h => ({ h, diff: (hs[h].shots.reduce((a,b)=>a+b,0)/hs[h].shots.length) - parByHole[h] }))
-    .sort((a,b) => a.diff - b.diff); // menor diff = mejor hoyo
+    .sort((a,b) => a.diff - b.diff);
 
-  // Colores degradados: 4 mejores (verde) y 4 peores (rojo)
-  // Verde: #1e5e3a (más oscuro) → #c8e6d8 (más claro)
-  // Rojo:  #8b1a0a (más oscuro) → #fdddd9 (más claro)
+  // Clases de color para avg (móvil usa mc-avg-*, desktop usa inline style)
+  const holeRankClass = {};
+  ['best1','best2','best3','best4'].forEach((c,i)=>{ if(holeRanking[i]) holeRankClass[holeRanking[i].h]='mc-avg-'+c; });
+  ['worst1','worst2','worst3','worst4'].forEach((c,i)=>{ const ri=holeRanking.length-1-i; if(holeRanking[ri]&&!holeRankClass[holeRanking[ri].h]) holeRankClass[holeRanking[ri].h]='mc-avg-worst'+(i+1); });
+
+  // Para desktop (inline styles)
   const bestColors  = ['#1e5e3a','#2d7a52','#5a9e7a','#c8e6d8'];
   const worstColors = ['#8b1a0a','#c0392b','#e07070','#fdddd9'];
   const bestText    = ['#fff','#fff','#fff','#1e5e3a'];
   const worstText   = ['#fff','#fff','#fff','#8b1a0a'];
-
   const holeColor = {};
   holeRanking.slice(0,4).forEach((item,i) => {
     holeColor[item.h] = { bg: bestColors[i], text: bestText[i], rank: i+1, type:'best' };
   });
   holeRanking.slice(-4).reverse().forEach((item,i) => {
-    if (!holeColor[item.h]) // no solapar con mejores
+    if (!holeColor[item.h])
       holeColor[item.h] = { bg: worstColors[i], text: worstText[i], rank: i+1, type:'worst' };
   });
+
   const cellSt = (s,p) => {
     if(!p||!s) return '';
     const d=s-p;
@@ -1454,6 +1527,15 @@ function loadCampo(courseName) {
     if(d===0)  return 'color:#555';
     if(d===1)  return 'background:#1a1a1a;color:#fff';
     return 'background:#1a1a1a;color:#fff;outline:2px solid #555;outline-offset:1px';
+  };
+  const mcScoreClass = (s,p) => {
+    if(!p) return 'mc-s-unknown';
+    const d=s-p;
+    if(d<=-2) return 'mc-s-eagle';
+    if(d===-1) return 'mc-s-birdie';
+    if(d===0)  return 'mc-s-par';
+    if(d===1)  return 'mc-s-bogey';
+    return 'mc-s-double';
   };
 
   // KPIs y año
@@ -1471,151 +1553,195 @@ function loadCampo(courseName) {
 
   const hasHoles = rondasH.length > 0 && hNums.length > 0;
 
+  // ── HELPERS para la sección móvil de hoyos ──
+  const mcHoleStatsHTML = () => {
+    const girTot  = hNums.reduce((s,h)=>s+hs[h].girT,0);
+    const girN    = hNums.reduce((s,h)=>s+hs[h].girN,0);
+    const fwTot   = hNums.reduce((s,h)=>s+hs[h].fwT,0);
+    const fwN     = hNums.reduce((s,h)=>s+hs[h].fwN,0);
+    const allPuts = hNums.flatMap(h=>hs[h].putts);
+    return \`
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:12px">
+      <div class="mc-hole-grid-hdr">
+        <div>H</div><div>Par</div><div>Prom.</div><div>Mín.</div>
+        <div style="color:var(--green2)">GIR</div><div>Cal.</div><div>Ptts</div>
+        <div style="color:#006db3">🦅</div><div style="color:#e8192c">🐦</div>
+        <div>Par</div><div>Bog</div><div>+2</div>
+      </div>
+      \${hNums.map(h=>{
+        const d=hs[h];
+        const cls=holeRankClass[h]||'mc-avg-neutral';
+        const av=avg1(d.shots); const mn=d.shots.length?Math.min(...d.shots):'—';
+        const girPct=d.girT?Math.round(d.girN/d.girT*100)+'%':'—';
+        const fwPct=d.fwT?Math.round(d.fwN/d.fwT*100)+'%':'—';
+        const putAvg=d.putts.length?(d.putts.reduce((a,b)=>a+b,0)/d.putts.length).toFixed(1):'—';
+        const girColor=d.girT?(d.girN/d.girT>=0.5?'color:var(--green2)':'color:var(--muted)'):'color:var(--muted)';
+        const fwColor=d.fwT?(d.fwN/d.fwT>=0.5?'color:var(--green2)':'color:var(--muted)'):'color:var(--muted)';
+        return \`<div class="mc-hole-grid">
+          <div style="color:var(--muted)">\${h}</div>
+          <div style="color:var(--muted)">\${parByHole[h]||'—'}</div>
+          <div><span class="\${cls}">\${av}</span></div>
+          <div style="color:var(--green2);font-size:11px">\${mn}</div>
+          <div style="font-size:10px;font-weight:600;\${girColor}">\${girPct}</div>
+          <div style="font-size:10px;font-weight:600;\${fwColor}">\${fwPct}</div>
+          <div style="font-size:10px;color:var(--muted)">\${putAvg}</div>
+          <div style="color:var(--blue);font-weight:700">\${d.eagles||''}</div>
+          <div style="color:var(--red);font-weight:700">\${d.birdies||''}</div>
+          <div style="color:var(--muted);font-size:11px">\${d.pars||''}</div>
+          <div style="color:var(--muted);font-size:11px">\${d.bogeys||''}</div>
+          <div style="color:var(--gold2);font-size:11px">\${d.doubles||''}</div>
+        </div>\`;
+      }).join('')}
+      <div class="mc-hole-grid-ftr">
+        <div>Tot</div><div style="color:var(--muted)">\${sumP(hNums)}</div>
+        <div></div><div></div>
+        <div style="color:var(--green2);font-size:10px">\${girTot?Math.round(girN/girTot*100)+'%':'—'}</div>
+        <div style="color:var(--muted);font-size:10px">\${fwTot?Math.round(fwN/fwTot*100)+'%':'—'}</div>
+        <div style="font-size:10px;color:var(--muted)">\${allPuts.length?(allPuts.reduce((a,b)=>a+b,0)/allPuts.length).toFixed(1):'—'}</div>
+        <div style="color:var(--blue);font-weight:700">\${hNums.reduce((s,h)=>s+(hs[h].eagles||0),0)||''}</div>
+        <div style="color:var(--red);font-weight:700">\${hNums.reduce((s,h)=>s+(hs[h].birdies||0),0)||''}</div>
+        <div style="color:var(--muted)">\${hNums.reduce((s,h)=>s+(hs[h].pars||0),0)||''}</div>
+        <div style="color:var(--muted)">\${hNums.reduce((s,h)=>s+(hs[h].bogeys||0),0)||''}</div>
+        <div style="color:var(--gold2)">\${hNums.reduce((s,h)=>s+(hs[h].doubles||0),0)||''}</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;font-size:10px;color:var(--muted)">
+      <span><span style="background:#1e5e3a;color:#fff;border-radius:3px;padding:1px 4px">▲1</span> mejor hoyo</span>
+      <span><span style="background:#8b1a0a;color:#fff;border-radius:3px;padding:1px 4px">▼1</span> peor hoyo</span>
+    </div>\`;
+  };
+
+  const mcRoundsHTML = () => rondas.map((r,idx)=>{
+    const hd=HOLES_DATA[r.id]||[];
+    const getH=h=>hd.find(x=>x.h===h);
+    const f9=front.map(h=>getH(h)).filter(Boolean);
+    const b9=back.map(h=>getH(h)).filter(Boolean);
+    const f9tot=f9.reduce((s,h)=>s+h.s,0);
+    const b9tot=b9.reduce((s,h)=>s+h.s,0);
+    const total=f9tot+b9tot;
+    const ouCls=r.ou<0?'neg':r.ou>0?'pos':'';
+    // pills
+    const girN=hd.filter(h=>h.gir).length, girT=hd.length;
+    const fwH=hd.filter(h=>parByHole[h.h]>=4&&h.fw===1), fwT=hd.filter(h=>parByHole[h.h]>=4);
+    const girPct=girT?Math.round(girN/girT*100):null;
+    const fwPct=fwT.length?Math.round(fwH.length/fwT.length*100):null;
+    const renderHalf=(holes,lbl,subtot,par9)=>\`
+      <div class="mc-sc-half">
+        <div class="mc-sc-label">\${lbl}</div>
+        <div class="mc-sc-holes">
+          \${holes.map(h=>\`<div class="mc-sc-hole">
+            <div class="mc-sc-hnum">\${h.h}</div>
+            <div class="mc-sc-score \${mcScoreClass(h.s,parByHole[h.h])}">\${h.s}</div>
+            <div class="mc-sc-hpar">\${parByHole[h.h]||''}</div>
+          </div>\`).join('')}
+          <div class="mc-sc-subtot">
+            <div class="mc-sc-hnum">\${lbl==='Salida'?'Out':'In'}</div>
+            <div class="mc-sc-subtot-val">\${subtot}</div>
+            <div class="mc-sc-hpar">\${par9}</div>
+          </div>
+        </div>
+      </div>\`;
+    return \`<div class="mc-round-card" id="mcr-\${idx}">
+      <div class="mc-round-header" onclick="toggleMcRound(\${idx})">
+        <span class="mc-round-date">\${r.date}</span>
+        <div class="mc-round-pills">
+          \${hd.length?[\`<div class="mc-pill"><span class="mc-pill-label">Golpes</span><span class="mc-pill-val">\${total||r.shots||'—'}</span></div>\`,
+            girPct!=null?\`<div class="mc-pill"><span class="mc-pill-label">GIR</span><span class="mc-pill-val" style="color:\${girPct>=50?'var(--green2)':'var(--muted)'}">\${girPct}%</span></div>\`:'',
+            fwPct!=null?\`<div class="mc-pill"><span class="mc-pill-label">Cal.</span><span class="mc-pill-val" style="color:\${fwPct>=50?'var(--green2)':'var(--muted)'}">\${fwPct}%</span></div>\`:'',
+          ].join(''):\`<div class="mc-pill"><span class="mc-pill-label">Golpes</span><span class="mc-pill-val">\${r.shots||'—'}</span></div>\`}
+          <div class="mc-pill" style="background:transparent">
+            <span class="mc-pill-label">S/Par</span>
+            <span class="mc-pill-val \${ouCls}">\${r.ou!=null?(r.ou>0?'+':'')+r.ou:'—'}</span>
+          </div>
+        </div>
+        <span class="mc-chevron">▼</span>
+      </div>
+      <div class="mc-scorecard-body" id="mcsb-\${idx}">
+        \${hd.length?\`<div class="mc-sc-grid">
+          \${renderHalf(f9,'Salida',f9tot,sumP(front))}
+          \${renderHalf(b9,'Vuelta',b9tot,sumP(back))}
+          <div class="mc-sc-total">
+            <span>Total</span>
+            <span class="mc-sc-total-val \${ouCls}">\${r.ou!=null?(r.ou>0?'+':'')+r.ou:'—'}</span>
+            <span style="color:var(--muted);font-size:12px">\${total} golpes</span>
+          </div>
+        </div>\`:\`<div style="padding:12px 14px;color:var(--muted);font-size:12px;font-style:italic">Sin datos de hoyo a hoyo</div>\`}
+      </div>
+    </div>\`;
+  }).join('');
+
+  // ── RENDER FINAL (mobile-first) ──
+  const ouCls2 = v => v<0?'ou-neg':v===0?'ou-par':'ou-pos';
   content.innerHTML = `
-    <!-- FILA 1: KPIs + tabla por años -->
-    <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px;align-items:flex-start">
-      <div style="display:flex;gap:12px;flex-wrap:wrap;flex:0 0 auto">
-        <div class="kpi"><div class="kpi-label">Vueltas</div><div class="kpi-val">${rondas.length}</div><div class="kpi-sub">${rondasH.length} con scorecard</div></div>
-        <div class="kpi"><div class="kpi-label">Prom. S/Par</div><div class="kpi-val" style="color:${parseFloat(avgOu)<=0?'var(--green2)':'var(--red)'}">${parseFloat(avgOu)>0?'+':''}${avgOu}</div><div class="kpi-sub">scoring avg</div></div>
-        <div class="kpi"><div class="kpi-label">Mejor</div><div class="kpi-val" class="${ouColor(bestOu)}">${bestOu>0?'+':''}${bestOu}</div><div class="kpi-sub">${bestR?.date||''}</div></div>
+    <!-- KPIs -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
+      <div class="kpi" style="padding:12px 10px;text-align:center">
+        <div class="kpi-label">Vueltas</div>
+        <div class="kpi-val" style="font-size:28px">${rondas.length}</div>
+        <div class="kpi-sub">${rondasH.length} con scorecard</div>
       </div>
-      <div class="card" style="flex:1;min-width:260px;padding:14px">
-        <div style="overflow-x:auto"><table style="width:100%;font-size:12px;border-collapse:collapse;white-space:nowrap">
-          <tr><td></td>${years.map(y=>`<th style="padding:4px 10px;color:var(--muted);font-size:11px;text-align:center">${y}</th>`).join('')}<th style="padding:4px 10px;color:var(--gold2);font-size:11px">Total</th></tr>
-          <tr><td style="color:var(--muted);font-size:11px;padding:4px 6px"># Vueltas</td>${years.map(y=>`<td style="text-align:center;padding:4px 10px">${byYear[y].n}</td>`).join('')}<td style="font-weight:700;text-align:center;padding:4px 10px">${rondas.length}</td></tr>
-          <tr><td style="color:var(--muted);font-size:11px;padding:4px 6px">S/Par avg</td>${years.map(y=>{const o=byYear[y].ous;const v=o.length?(o.reduce((a,b)=>a+b,0)/o.length).toFixed(1):'—';return `<td style="text-align:center;padding:4px 10px;color:${parseFloat(v)<=0?'var(--green2)':'var(--red)'}">${parseFloat(v)>0?'+':''}${v}</td>`;}).join('')}<td style="font-weight:700;text-align:center;padding:4px 10px;color:${parseFloat(avgOu)<=0?'var(--green2)':'var(--red)'}">${parseFloat(avgOu)>0?'+':''}${avgOu}</td></tr>
-        </table></div>
+      <div class="kpi" style="padding:12px 10px;text-align:center">
+        <div class="kpi-label">Prom. S/Par</div>
+        <div class="kpi-val" style="font-size:28px;color:${parseFloat(avgOu)<=0?'var(--green2)':'var(--red)'}">${parseFloat(avgOu)>0?'+':''}${avgOu}</div>
+        <div class="kpi-sub">scoring avg</div>
       </div>
+      <div class="kpi" style="padding:12px 10px;text-align:center">
+        <div class="kpi-label">Mejor</div>
+        <div class="kpi-val" style="font-size:28px" class="${ouCls2(bestOu)}">${bestOu>0?'+':''}${bestOu}</div>
+        <div class="kpi-sub">${bestR?.date||''}</div>
+      </div>
+    </div>
+
+    <!-- Tabla por año -->
+    <div class="card" style="padding:14px;margin-bottom:12px;overflow-x:auto">
+      <table style="width:100%;font-size:12px;border-collapse:collapse;white-space:nowrap">
+        <tr><td></td>${years.map(y=>`<th style="padding:4px 10px;color:var(--muted);font-size:11px;text-align:center">${y}</th>`).join('')}<th style="padding:4px 10px;color:var(--gold2);font-size:11px">Total</th></tr>
+        <tr><td style="color:var(--muted);font-size:11px;padding:4px 6px"># Vueltas</td>${years.map(y=>`<td style="text-align:center;padding:4px 10px">${byYear[y].n}</td>`).join('')}<td style="font-weight:700;text-align:center;padding:4px 10px">${rondas.length}</td></tr>
+        <tr><td style="color:var(--muted);font-size:11px;padding:4px 6px">S/Par avg</td>${years.map(y=>{const o=byYear[y].ous;const v=o.length?(o.reduce((a,b)=>a+b,0)/o.length).toFixed(1):'—';return `<td style="text-align:center;padding:4px 10px;color:${parseFloat(v)<=0?'var(--green2)':'var(--red)'}">${parseFloat(v)>0?'+':''}${v}</td>`;}).join('')}<td style="font-weight:700;text-align:center;padding:4px 10px;color:${parseFloat(avgOu)<=0?'var(--green2)':'var(--red)'}">${parseFloat(avgOu)>0?'+':''}${avgOu}</td></tr>
+      </table>
     </div>
 
     ${hasHoles ? `
-    <!-- FILA 2: Stats por hoyo + promedio por tipo -->
-    <div style="display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:16px">
-      <div class="card" style="padding:0;overflow:hidden">
-        <div style="padding:10px 16px;border-bottom:1px solid var(--border);font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--gold2)">Estadísticas por hoyo</div>
-        <div class="scorecard-wrap"><table class="scorecard-tbl" style="font-size:11px">
-          <thead><tr>
-            <th style="text-align:left;padding-left:10px;min-width:40px">H</th>
-            <th>Par</th><th>Prom.</th><th>Mín.</th>
-            <th style="background:#deeaf7;color:#006db3;min-width:28px">🦅</th>
-            <th style="background:#fde8ea;color:#c0392b;min-width:28px">🐦</th>
-            <th style="min-width:28px">Par</th>
-            <th style="min-width:28px">Bog</th>
-            <th style="min-width:28px">+2</th>
-            <th style="min-width:28px">+3</th>
-          </tr></thead>
-          <tbody>
-            ${hNums.map(h=>`<tr>
-              <td style="color:var(--muted);text-align:left;padding-left:10px">${h}</td>
-              <td style="color:var(--muted)">${parByHole[h]||'—'}</td>
-              <td style="${holeColor[h]?'background:'+holeColor[h].bg+';color:'+holeColor[h].text+';font-weight:700':'font-weight:600'}">${avg1(hs[h]?.shots||[])}${holeColor[h]?(holeColor[h].type==='best'?'<span style="font-size:9px;opacity:.7"> ▲'+holeColor[h].rank+'</span>':'<span style="font-size:9px;opacity:.7"> ▼'+holeColor[h].rank+'</span>'):''}</td>
-              <td style="color:var(--green2)">${min1(hs[h]?.shots||[])}</td>
-              <td style="background:#deeaf7;color:#006db3;font-weight:600">${hs[h]?.eagles||''}</td>
-              <td style="background:#fde8ea;color:#c0392b;font-weight:600">${hs[h]?.birdies||''}</td>
-              <td>${hs[h]?.pars||''}</td>
-              <td>${hs[h]?.bogeys||''}</td>
-              <td>${hs[h]?.doubles||''}</td>
-              <td>${hs[h]?.triples||''}</td>
-            </tr>`).join('')}
-            <tr style="border-top:2px solid var(--border);font-weight:700;background:var(--card2)">
-              <td style="text-align:left;padding-left:10px;color:var(--muted)">Tot</td>
-              <td style="color:var(--muted)">${sumP(hNums)}</td>
-              <td></td><td></td>
-              <td style="background:#deeaf7;color:#006db3">${hNums.reduce((s,h)=>s+(hs[h]?.eagles||0),0)||''}</td>
-              <td style="background:#fde8ea;color:#c0392b">${hNums.reduce((s,h)=>s+(hs[h]?.birdies||0),0)||''}</td>
-              <td>${hNums.reduce((s,h)=>s+(hs[h]?.pars||0),0)||''}</td>
-              <td>${hNums.reduce((s,h)=>s+(hs[h]?.bogeys||0),0)||''}</td>
-              <td>${hNums.reduce((s,h)=>s+(hs[h]?.doubles||0),0)||''}</td>
-              <td>${hNums.reduce((s,h)=>s+(hs[h]?.triples||0),0)||''}</td>
-            </tr>
-          </tbody>
-        </table></div>
-      </div>
-
-      <div style="display:flex;flex-direction:column;gap:12px">
-        <div class="card" style="padding:14px">
-          <div style="font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--gold2);margin-bottom:10px">Promedio por tipo</div>
-          ${[3,4,5].map(p=>{
-            const a=pg[p]; if(!a.length) return '';
-            const av=(a.reduce((s,x)=>s+x,0)/a.length), diff=av-p;
-            return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
-              <span style="font-weight:700;color:var(--gold2)">Par ${p}</span>
-              <span style="font-weight:600">${av.toFixed(2)}</span>
-              <span style="color:${diff>0?'var(--red)':'var(--green2)'};">${diff>0?'+':''}${diff.toFixed(2)}</span>
-            </div>`;
-          }).join('')}
-          <div style="font-size:10px;color:var(--muted);margin-top:8px">${pg[3].length+pg[4].length+pg[5].length} hoyos analizados</div>
-        </div>
-        <div class="card" style="padding:0;overflow:hidden;flex:1">
-          <div style="padding:10px 16px;border-bottom:1px solid var(--border);font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--gold2)">S/Par por año</div>
-          <div class="chart-wrap" style="height:160px;padding:8px"><canvas id="campo-chart-year"></canvas></div>
-        </div>
-      </div>
+    <!-- Promedio por tipo -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
+      ${[3,4,5].map(p=>{
+        const a=pg[p]; if(!a.length) return `<div class="kpi" style="padding:12px 8px;text-align:center"><div class="kpi-label">Par ${p}</div><div class="kpi-val" style="font-size:24px">—</div></div>`;
+        const av=a.reduce((s,x)=>s+x,0)/a.length, diff=av-p;
+        return `<div class="kpi" style="padding:12px 8px;text-align:center">
+          <div class="kpi-label">Par ${p}</div>
+          <div class="kpi-val" style="font-size:24px">${av.toFixed(2)}</div>
+          <div class="kpi-sub" style="color:${diff>0?'var(--red)':'var(--green2)'};font-weight:700">${diff>0?'+':''}${diff.toFixed(2)}</div>
+          <div class="kpi-sub">${a.length} hoyos</div>
+        </div>`;
+      }).join('')}
     </div>
 
-    <!-- FILA 3: Tabla de vueltas ANCHO COMPLETO -->
-    <div class="card" style="padding:0;overflow:hidden">
-      <div style="padding:10px 16px;border-bottom:1px solid var(--border);font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--gold2)">Scorecard por vuelta</div>
-      <div class="scorecard-wrap"><table class="scorecard-tbl" style="font-size:11px;width:100%">
-        <thead>
-          <tr>
-            <th class="row-label" style="min-width:90px;position:sticky;left:0;background:var(--card2)">Fecha</th>
-            ${front.map(h=>`<th>${h}</th>`).join('')}
-            <th class="col-subtotal">Out</th>
-            ${back.map(h=>`<th>${h}</th>`).join('')}
-            <th class="col-subtotal">In</th>
-            <th class="col-total" style="min-width:40px">Tot</th>
-          </tr>
-          <tr class="row-par">
-            <td class="row-label" style="font-size:10px;position:sticky;left:0;background:#e8f4ee">Par</td>
-            ${front.map(h=>`<td>${parByHole[h]||'—'}</td>`).join('')}
-            <td class="col-subtotal">${sumP(front)}</td>
-            ${back.map(h=>`<td>${parByHole[h]||'—'}</td>`).join('')}
-            <td class="col-subtotal">${sumP(back)}</td>
-            <td class="col-total">${sumP(hNums)}</td>
-          </tr>
-        </thead>
-        <tbody>
-          ${rondas.map(r=>{
-            const holes=HOLES_DATA[r.id]||[];
-            const hasH = holes.length > 0;
-            const getH = h => holes.find(x=>x.h===h);
-            const f9=front.reduce((s,h)=>{const ho=getH(h);return s+(ho?.s||0);},0);
-            const b9=back.reduce((s,h)=>{const ho=getH(h);return s+(ho?.s||0);},0);
-            const totalCols = front.length + 1 + back.length + 1; // hoyos + Out + In
-            if (!hasH) {
-              // Vuelta sin datos de hoyo: mostrar fecha + score a todo ancho
-              return `<tr style="opacity:.7">
-                <td class="row-label" style="font-size:10px;color:var(--muted);position:sticky;left:0;background:var(--card)">${r.date}</td>
-                <td colspan="${totalCols}" style="text-align:center;font-size:11px;color:var(--muted);font-style:italic">Sin datos de hoyo</td>
-                <td class="col-total ${ouColor(r.ou)}" style="font-weight:700">${r.ou!=null?ouFmt(r.ou):'—'}</td>
-              </tr>`;
-            }
-            return `<tr>
-              <td class="row-label" style="font-size:10px;color:var(--muted);position:sticky;left:0;background:var(--card)">${r.date}</td>
-              ${front.map(h=>{const ho=getH(h);if(!ho)return '<td style="color:var(--muted)">—</td>';const st=cellSt(ho.s,parByHole[h]);return `<td><span style="${st};display:inline-block;min-width:20px;height:20px;line-height:20px;font-size:11px;font-weight:700;text-align:center">${ho.s}</span></td>`;}).join('')}
-              <td class="col-subtotal">${f9||'—'}</td>
-              ${back.map(h=>{const ho=getH(h);if(!ho)return '<td style="color:var(--muted)">—</td>';const st=cellSt(ho.s,parByHole[h]);return `<td><span style="${st};display:inline-block;min-width:20px;height:20px;line-height:20px;font-size:11px;font-weight:700;text-align:center">${ho.s}</span></td>`;}).join('')}
-              <td class="col-subtotal">${b9||'—'}</td>
-              <td class="col-total ${ouColor(r.ou)}" style="font-weight:700">${r.ou!=null?ouFmt(r.ou):'—'}</td>
-            </tr>`;
-          }).join('')}
-          <tr style="border-top:2px solid var(--border);background:var(--card2)">
-            <td class="row-label" style="font-weight:700;font-size:10px;position:sticky;left:0;background:var(--card2)">Prom.</td>
-            ${front.map(h=>`<td style="font-weight:600;color:var(--gold2)">${avg1(hs[h]?.shots||[])}</td>`).join('')}
-            <td class="col-subtotal"></td>
-            ${back.map(h=>`<td style="font-weight:600;color:var(--gold2)">${avg1(hs[h]?.shots||[])}</td>`).join('')}
-            <td class="col-subtotal"></td>
-            <td class="col-total" style="font-weight:700;color:var(--gold2)">${parseFloat(avgOu)>0?'+':''}${avgOu}</td>
-          </tr>
-        </tbody>
-      </table></div>
+    <!-- Gráfica S/Par por año -->
+    <div class="card" style="padding:12px;margin-bottom:12px;height:170px;position:relative">
+      <div style="font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--gold2);margin-bottom:6px">S/Par por año</div>
+      <canvas id="campo-chart-year" style="height:130px"></canvas>
     </div>
-    ` : `<div class="card"><p style="color:var(--muted)">⚠️ Ejecuta <code>update_holes.py</code> y sube <code>data/holes.json</code> a GitHub para ver el scorecard.</p>
-    <div style="margin-top:12px"><table style="width:100%;font-size:13px;border-collapse:collapse">
-      <thead><tr><th style="text-align:left;padding:6px;border-bottom:1px solid var(--border)">Fecha</th><th style="padding:6px;border-bottom:1px solid var(--border)">S/Par</th></tr></thead>
-      <tbody>${rondas.map(r=>`<tr><td style="padding:6px;color:var(--muted)">${r.date}</td><td style="padding:6px;text-align:center" class="${ouColor(r.ou)}">${r.ou!=null?ouFmt(r.ou):'—'}</td></tr>`).join('')}</tbody>
-    </table></div></div>`}
+
+    <!-- Stats por hoyo -->
+    <div style="font-family:'Cormorant Garamond',serif;font-size:17px;color:var(--gold2);margin-bottom:8px">Estadísticas por hoyo</div>
+    ${mcHoleStatsHTML()}
+
+    <!-- Scorecard por vuelta -->
+    <div style="font-family:'Cormorant Garamond',serif;font-size:17px;color:var(--gold2);margin-bottom:8px">Scorecard por vuelta</div>
+    ${mcRoundsHTML()}
+
+    ` : `
+    <!-- Sin datos de hoyo -->
+    <div class="card" style="margin-bottom:12px">
+      <p style="color:var(--muted)">⚠️ Ejecuta <code>update_holes.py</code> y sube <code>data/holes.json</code> a GitHub para ver el scorecard.</p>
+      <div style="margin-top:12px">
+        <table style="width:100%;font-size:13px;border-collapse:collapse">
+          <thead><tr><th style="text-align:left;padding:6px;border-bottom:1px solid var(--border)">Fecha</th><th style="padding:6px;border-bottom:1px solid var(--border)">S/Par</th></tr></thead>
+          <tbody>${rondas.map(r=>`<tr><td style="padding:6px;color:var(--muted)">${r.date}</td><td style="padding:6px;text-align:center" class="${ouCls2(r.ou)}">${r.ou!=null?ouFmt(r.ou):'—'}</td></tr>`).join('')}</tbody>
+        </table>
+      </div>
+    </div>
+    `}
   `;
 
   setTimeout(()=>{
@@ -1635,6 +1761,7 @@ function loadCampo(courseName) {
 
 
 function toggleRonda(id){const el=document.getElementById(id);if(el)el.classList.toggle('open');}
+function toggleMcRound(idx){const c=document.getElementById('mcr-'+idx);if(c)c.classList.toggle('open');}
 
 function clearCampo() {
   document.getElementById('campo-search').value = '';
