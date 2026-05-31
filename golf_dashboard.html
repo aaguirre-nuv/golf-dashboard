@@ -1554,190 +1554,219 @@ function loadCampo(courseName) {
   const hasHoles = rondasH.length > 0 && hNums.length > 0;
 
   // ── HELPERS para la sección móvil de hoyos ──
-  const mcHoleStatsHTML = () => {
-    const girTot  = hNums.reduce((s,h)=>s+hs[h].girT,0);
-    const girN    = hNums.reduce((s,h)=>s+hs[h].girN,0);
-    const fwTot   = hNums.reduce((s,h)=>s+hs[h].fwT,0);
-    const fwN     = hNums.reduce((s,h)=>s+hs[h].fwN,0);
-    const allPuts = hNums.flatMap(h=>hs[h].putts);
-    return `
-    <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:12px">
-      <div class="mc-hole-grid-hdr">
-        <div>H</div><div>Par</div><div>Prom.</div><div>Mín.</div>
-        <div style="color:var(--green2)">GIR</div><div>Cal.</div><div>Ptts</div>
-        <div style="color:#006db3">🦅</div><div style="color:#e8192c">🐦</div>
-        <div>Par</div><div>Bog</div><div>+2</div>
-      </div>
-      \${hNums.map(h=>{
-        const d=hs[h];
-        const cls=holeRankClass[h]||'mc-avg-neutral';
-        const av=avg1(d.shots); const mn=d.shots.length?Math.min(...d.shots):'—';
-        const girPct=d.girT?Math.round(d.girN/d.girT*100)+'%':'—';
-        const fwPct=d.fwT?Math.round(d.fwN/d.fwT*100)+'%':'—';
-        const putAvg=d.putts.length?(d.putts.reduce((a,b)=>a+b,0)/d.putts.length).toFixed(1):'—';
-        const girColor=d.girT?(d.girN/d.girT>=0.5?'color:var(--green2)':'color:var(--muted)'):'color:var(--muted)';
-        const fwColor=d.fwT?(d.fwN/d.fwT>=0.5?'color:var(--green2)':'color:var(--muted)'):'color:var(--muted)';
-        return `<div class="mc-hole-grid">
-          <div style="color:var(--muted)">\${h}</div>
-          <div style="color:var(--muted)">\${parByHole[h]||'—'}</div>
-          <div><span class="\${cls}">\${av}</span></div>
-          <div style="color:var(--green2);font-size:11px">\${mn}</div>
-          <div style="font-size:10px;font-weight:600;\${girColor}">\${girPct}</div>
-          <div style="font-size:10px;font-weight:600;\${fwColor}">\${fwPct}</div>
-          <div style="font-size:10px;color:var(--muted)">\${putAvg}</div>
-          <div style="color:var(--blue);font-weight:700">\${d.eagles||''}</div>
-          <div style="color:var(--red);font-weight:700">\${d.birdies||''}</div>
-          <div style="color:var(--muted);font-size:11px">\${d.pars||''}</div>
-          <div style="color:var(--muted);font-size:11px">\${d.bogeys||''}</div>
-          <div style="color:var(--gold2);font-size:11px">\${d.doubles||''}</div>
-        </div>`;
-      }).join('')}
-      <div class="mc-hole-grid-ftr">
-        <div>Tot</div><div style="color:var(--muted)">\${sumP(hNums)}</div>
-        <div></div><div></div>
-        <div style="color:var(--green2);font-size:10px">\${girTot?Math.round(girN/girTot*100)+'%':'—'}</div>
-        <div style="color:var(--muted);font-size:10px">\${fwTot?Math.round(fwN/fwTot*100)+'%':'—'}</div>
-        <div style="font-size:10px;color:var(--muted)">\${allPuts.length?(allPuts.reduce((a,b)=>a+b,0)/allPuts.length).toFixed(1):'—'}</div>
-        <div style="color:var(--blue);font-weight:700">\${hNums.reduce((s,h)=>s+(hs[h].eagles||0),0)||''}</div>
-        <div style="color:var(--red);font-weight:700">\${hNums.reduce((s,h)=>s+(hs[h].birdies||0),0)||''}</div>
-        <div style="color:var(--muted)">\${hNums.reduce((s,h)=>s+(hs[h].pars||0),0)||''}</div>
-        <div style="color:var(--muted)">\${hNums.reduce((s,h)=>s+(hs[h].bogeys||0),0)||''}</div>
-        <div style="color:var(--gold2)">\${hNums.reduce((s,h)=>s+(hs[h].doubles||0),0)||''}</div>
-      </div>
-    </div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;font-size:10px;color:var(--muted)">
-      <span><span style="background:#1e5e3a;color:#fff;border-radius:3px;padding:1px 4px">▲1</span> mejor hoyo</span>
-      <span><span style="background:#8b1a0a;color:#fff;border-radius:3px;padding:1px 4px">▼1</span> peor hoyo</span>
-    </div>`;
+  var CG = "font-family:'Cormorant Garamond',serif";
+  var GOLD2s = "color:var(--gold2)";
+
+  var mcHoleStatsHTML = function() {
+    var girTot = hNums.reduce(function(s,hh){return s+hs[hh].girT;},0);
+    var girN   = hNums.reduce(function(s,hh){return s+hs[hh].girN;},0);
+    var fwTot  = hNums.reduce(function(s,hh){return s+hs[hh].fwT;},0);
+    var fwN    = hNums.reduce(function(s,hh){return s+hs[hh].fwN;},0);
+    var allPuts= hNums.reduce(function(a,hh){return a.concat(hs[hh].putts);},[]);
+    var rows = hNums.map(function(hh) {
+      var d   = hs[hh];
+      var cls = holeRankClass[hh] || 'mc-avg-neutral';
+      var av  = avg1(d.shots);
+      var mn  = d.shots.length ? Math.min.apply(null,d.shots) : '\u2014';
+      var girPct = d.girT ? Math.round(d.girN/d.girT*100)+'%' : '\u2014';
+      var fwPct  = d.fwT  ? Math.round(d.fwN/d.fwT*100)+'%'  : '\u2014';
+      var putAvg = d.putts.length ? (d.putts.reduce(function(a,b){return a+b;},0)/d.putts.length).toFixed(1) : '\u2014';
+      var girCol = d.girT ? (d.girN/d.girT>=0.5 ? 'color:var(--green2)' : 'color:var(--muted)') : 'color:var(--muted)';
+      var fwCol  = d.fwT  ? (d.fwN/d.fwT>=0.5  ? 'color:var(--green2)' : 'color:var(--muted)') : 'color:var(--muted)';
+      return '<div class="mc-hole-grid">'
+        +'<div style="color:var(--muted)">'+hh+'</div>'
+        +'<div style="color:var(--muted)">'+(parByHole[hh]||'\u2014')+'</div>'
+        +'<div><span class="'+cls+'">'+av+'</span></div>'
+        +'<div style="color:var(--green2);font-size:11px">'+mn+'</div>'
+        +'<div style="font-size:10px;font-weight:600;'+girCol+'">'+girPct+'</div>'
+        +'<div style="font-size:10px;font-weight:600;'+fwCol+'">'+fwPct+'</div>'
+        +'<div style="font-size:10px;color:var(--muted)">'+putAvg+'</div>'
+        +'<div style="color:var(--blue);font-weight:700">'+(d.eagles||'')+'</div>'
+        +'<div style="color:var(--red);font-weight:700">'+(d.birdies||'')+'</div>'
+        +'<div style="color:var(--muted);font-size:11px">'+(d.pars||'')+'</div>'
+        +'<div style="color:var(--muted);font-size:11px">'+(d.bogeys||'')+'</div>'
+        +'<div style="color:var(--gold2);font-size:11px">'+(d.doubles||'')+'</div>'
+        +'</div>';
+    }).join('');
+    var eTot  = hNums.reduce(function(s,hh){return s+(hs[hh].eagles||0);},0);
+    var biTot = hNums.reduce(function(s,hh){return s+(hs[hh].birdies||0);},0);
+    var paTot = hNums.reduce(function(s,hh){return s+(hs[hh].pars||0);},0);
+    var boTot = hNums.reduce(function(s,hh){return s+(hs[hh].bogeys||0);},0);
+    var dTot  = hNums.reduce(function(s,hh){return s+(hs[hh].doubles||0);},0);
+    var footer = '<div class="mc-hole-grid-ftr">'
+      +'<div>Tot</div><div style="color:var(--muted)">'+sumP(hNums)+'</div>'
+      +'<div></div><div></div>'
+      +'<div style="color:var(--green2);font-size:10px">'+(girTot?Math.round(girN/girTot*100)+'%':'\u2014')+'</div>'
+      +'<div style="color:var(--muted);font-size:10px">'+(fwTot?Math.round(fwN/fwTot*100)+'%':'\u2014')+'</div>'
+      +'<div style="font-size:10px;color:var(--muted)">'+(allPuts.length?(allPuts.reduce(function(a,b){return a+b;},0)/allPuts.length).toFixed(1):'\u2014')+'</div>'
+      +'<div style="color:var(--blue);font-weight:700">'+(eTot||'')+'</div>'
+      +'<div style="color:var(--red);font-weight:700">'+(biTot||'')+'</div>'
+      +'<div style="color:var(--muted)">'+(paTot||'')+'</div>'
+      +'<div style="color:var(--muted)">'+(boTot||'')+'</div>'
+      +'<div style="color:var(--gold2)">'+(dTot||'')+'</div>'
+      +'</div>';
+    return '<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:12px">'
+      +'<div class="mc-hole-grid-hdr">'
+      +'<div>H</div><div>Par</div><div>Prom.</div><div>Min.</div>'
+      +'<div style="color:var(--green2)">GIR</div><div>Cal.</div><div>Ptts</div>'
+      +'<div style="color:#006db3">&#x1F985;</div><div style="color:#e8192c">&#x1F426;</div>'
+      +'<div>Par</div><div>Bog</div><div>+2</div>'
+      +'</div>'
+      +rows+footer
+      +'</div>'
+      +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;font-size:10px;color:var(--muted)">'
+      +'<span><span style="background:#1e5e3a;color:#fff;border-radius:3px;padding:1px 4px">&#9650;1</span> mejor hoyo</span>'
+      +'<span><span style="background:#8b1a0a;color:#fff;border-radius:3px;padding:1px 4px">&#9660;1</span> peor hoyo</span>'
+      +'</div>';
   };
 
-  const mcRoundsHTML = () => rondas.map((r,idx)=>{
-    const hd=HOLES_DATA[r.id]||[];
-    const getH=h=>hd.find(x=>x.h===h);
-    const f9=front.map(h=>getH(h)).filter(Boolean);
-    const b9=back.map(h=>getH(h)).filter(Boolean);
-    const f9tot=f9.reduce((s,h)=>s+h.s,0);
-    const b9tot=b9.reduce((s,h)=>s+h.s,0);
-    const total=f9tot+b9tot;
-    const ouCls=r.ou<0?'neg':r.ou>0?'pos':'';
-    // pills
-    const girN=hd.filter(h=>h.gir).length, girT=hd.length;
-    const fwH=hd.filter(h=>parByHole[h.h]>=4&&h.fw===1), fwT=hd.filter(h=>parByHole[h.h]>=4);
-    const girPct=girT?Math.round(girN/girT*100):null;
-    const fwPct=fwT.length?Math.round(fwH.length/fwT.length*100):null;
-    const renderHalf=(holes,lbl,subtot,par9)=>`
-      <div class="mc-sc-half">
-        <div class="mc-sc-label">\${lbl}</div>
-        <div class="mc-sc-holes">
-          \${holes.map(h=>`<div class="mc-sc-hole">
-            <div class="mc-sc-hnum">\${h.h}</div>
-            <div class="mc-sc-score \${mcScoreClass(h.s,parByHole[h.h])}">\${h.s}</div>
-            <div class="mc-sc-hpar">\${parByHole[h.h]||''}</div>
-          </div>`).join('')}
-          <div class="mc-sc-subtot">
-            <div class="mc-sc-hnum">\${lbl==='Salida'?'Out':'In'}</div>
-            <div class="mc-sc-subtot-val">\${subtot}</div>
-            <div class="mc-sc-hpar">\${par9}</div>
-          </div>
-        </div>
-      </div>`;
-    return `<div class="mc-round-card" id="mcr-\${idx}">
-      <div class="mc-round-header" onclick="toggleMcRound(\${idx})">
-        <span class="mc-round-date">\${r.date}</span>
-        <div class="mc-round-pills">
-          \${hd.length?[`<div class="mc-pill"><span class="mc-pill-label">Golpes</span><span class="mc-pill-val">\${total||r.shots||'—'}</span></div>`,
-            girPct!=null?`<div class="mc-pill"><span class="mc-pill-label">GIR</span><span class="mc-pill-val" style="color:\${girPct>=50?'var(--green2)':'var(--muted)'}">\${girPct}%</span></div>`:'',
-            fwPct!=null?`<div class="mc-pill"><span class="mc-pill-label">Cal.</span><span class="mc-pill-val" style="color:\${fwPct>=50?'var(--green2)':'var(--muted)'}">\${fwPct}%</span></div>`:'',
-          ].join(''):`<div class="mc-pill"><span class="mc-pill-label">Golpes</span><span class="mc-pill-val">\${r.shots||'—'}</span></div>`}
-          <div class="mc-pill" style="background:transparent">
-            <span class="mc-pill-label">S/Par</span>
-            <span class="mc-pill-val \${ouCls}">\${r.ou!=null?(r.ou>0?'+':'')+r.ou:'—'}</span>
-          </div>
-        </div>
-        <span class="mc-chevron">▼</span>
-      </div>
-      <div class="mc-scorecard-body" id="mcsb-\${idx}">
-        \${hd.length?`<div class="mc-sc-grid">
-          \${renderHalf(f9,'Salida',f9tot,sumP(front))}
-          \${renderHalf(b9,'Vuelta',b9tot,sumP(back))}
-          <div class="mc-sc-total">
-            <span>Total</span>
-            <span class="mc-sc-total-val \${ouCls}">\${r.ou!=null?(r.ou>0?'+':'')+r.ou:'—'}</span>
-            <span style="color:var(--muted);font-size:12px">\${total} golpes</span>
-          </div>
-        </div>`:`<div style="padding:12px 14px;color:var(--muted);font-size:12px;font-style:italic">Sin datos de hoyo a hoyo</div>`}
-      </div>
-    </div>`;
-  }).join('');
+  var mcScoreClass2 = function(s,p) {
+    if (!p) return 'mc-s-unknown';
+    var d = s - p;
+    if (d <= -2) return 'mc-s-eagle';
+    if (d === -1) return 'mc-s-birdie';
+    if (d === 0)  return 'mc-s-par';
+    if (d === 1)  return 'mc-s-bogey';
+    return 'mc-s-double';
+  };
+
+  var mcRoundsHTML = function() {
+    return rondas.map(function(r, idx) {
+      var hd   = HOLES_DATA[r.id] || [];
+      var getH = function(hnum) { return hd.find(function(x){ return x.h === hnum; }); };
+      var f9   = front.map(getH).filter(Boolean);
+      var b9   = back.map(getH).filter(Boolean);
+      var f9tot = f9.reduce(function(s,hole){ return s+hole.s; }, 0);
+      var b9tot = b9.reduce(function(s,hole){ return s+hole.s; }, 0);
+      var total = f9tot + b9tot;
+      var ouCls = r.ou < 0 ? 'neg' : r.ou > 0 ? 'pos' : '';
+      var ouStr = r.ou != null ? (r.ou>0?'+':'')+r.ou : '\u2014';
+      var girNr = hd.filter(function(hole){ return hole.gir; }).length;
+      var fwH2  = hd.filter(function(hole){ return parByHole[hole.h]>=4 && hole.fw===1; }).length;
+      var fwT2  = hd.filter(function(hole){ return parByHole[hole.h]>=4; }).length;
+      var girPct = hd.length ? Math.round(girNr/hd.length*100) : null;
+      var fwPct  = fwT2 ? Math.round(fwH2/fwT2*100) : null;
+
+      var renderHalf = function(holes, lbl, subtot, par9) {
+        var inOut = lbl === 'Salida' ? 'Out' : 'In';
+        var items = holes.map(function(hole) {
+          var sc = mcScoreClass2(hole.s, parByHole[hole.h]);
+          return '<div class="mc-sc-hole">'
+            +'<div class="mc-sc-hnum">'+hole.h+'</div>'
+            +'<div class="mc-sc-score '+sc+'">'+hole.s+'</div>'
+            +'<div class="mc-sc-hpar">'+(parByHole[hole.h]||'')+'</div>'
+            +'</div>';
+        }).join('');
+        return '<div class="mc-sc-half">'
+          +'<div class="mc-sc-label">'+lbl+'</div>'
+          +'<div class="mc-sc-holes">'+items
+            +'<div class="mc-sc-subtot">'
+              +'<div class="mc-sc-hnum">'+inOut+'</div>'
+              +'<div class="mc-sc-subtot-val">'+subtot+'</div>'
+              +'<div class="mc-sc-hpar">'+par9+'</div>'
+            +'</div>'
+          +'</div>'
+          +'</div>';
+      };
+
+      var pillsHTML = '<div class="mc-pill"><span class="mc-pill-label">Golpes</span><span class="mc-pill-val">'+(hd.length?(total||r.shots||'\u2014'):(r.shots||'\u2014'))+'</span></div>';
+      if (hd.length && girPct!=null) pillsHTML += '<div class="mc-pill"><span class="mc-pill-label">GIR</span><span class="mc-pill-val" style="color:'+(girPct>=50?'var(--green2)':'var(--muted)')+'">'+girPct+'%</span></div>';
+      if (hd.length && fwPct!=null)  pillsHTML += '<div class="mc-pill"><span class="mc-pill-label">Cal.</span><span class="mc-pill-val" style="color:'+(fwPct>=50?'var(--green2)':'var(--muted)')+'">'+fwPct+'%</span></div>';
+
+      var scorecardBody = hd.length
+        ? '<div class="mc-sc-grid">'
+            +renderHalf(f9,'Salida',f9tot,sumP(front))
+            +renderHalf(b9,'Vuelta',b9tot,sumP(back))
+            +'<div class="mc-sc-total"><span>Total</span>'
+              +'<span class="mc-sc-total-val '+ouCls+'">'+ouStr+'</span>'
+              +'<span style="color:var(--muted);font-size:12px">'+total+' golpes</span>'
+            +'</div></div>'
+        : '<div style="padding:12px 14px;color:var(--muted);font-size:12px;font-style:italic">Sin datos de hoyo a hoyo</div>';
+
+      return '<div class="mc-round-card" id="mcr-'+idx+'">'
+        +'<div class="mc-round-header" onclick="toggleMcRound('+idx+')">'
+          +'<span class="mc-round-date">'+r.date+'</span>'
+          +'<div class="mc-round-pills">'+pillsHTML
+            +'<div class="mc-pill" style="background:transparent">'
+              +'<span class="mc-pill-label">S/Par</span>'
+              +'<span class="mc-pill-val '+ouCls+'">'+ouStr+'</span>'
+            +'</div>'
+          +'</div>'
+          +'<span class="mc-chevron">&#9660;</span>'
+        +'</div>'
+        +'<div class="mc-scorecard-body" id="mcsb-'+idx+'">'+scorecardBody+'</div>'
+        +'</div>';
+    }).join('');
+  };
 
   // ── RENDER FINAL ──
-  const ouCls2 = v => v<0?'ou-neg':v===0?'ou-par':'ou-pos';
-
-  let holesSection = '';
+  var ouCls2 = function(v) { return v<0?'ou-neg':v===0?'ou-par':'ou-pos'; };
+  var holesSection = '';
   if (hasHoles) {
-    const pg3 = pg[3].length ? (() => { const av=pg[3].reduce((s,x)=>s+x,0)/pg[3].length, diff=av-3; return `<div class="kpi" style="padding:12px 8px;text-align:center"><div class="kpi-label">Par 3</div><div class="kpi-val" style="font-size:24px">${av.toFixed(2)}</div><div class="kpi-sub" style="color:${diff>0?'var(--red)':'var(--green2)'};font-weight:700">${diff>0?'+':''}${diff.toFixed(2)}</div><div class="kpi-sub">${pg[3].length} hoyos</div></div>`; })() : '<div class="kpi" style="padding:12px 8px;text-align:center"><div class="kpi-label">Par 3</div><div class="kpi-val" style="font-size:24px">—</div></div>';
-    const pg4 = pg[4].length ? (() => { const av=pg[4].reduce((s,x)=>s+x,0)/pg[4].length, diff=av-4; return `<div class="kpi" style="padding:12px 8px;text-align:center"><div class="kpi-label">Par 4</div><div class="kpi-val" style="font-size:24px">${av.toFixed(2)}</div><div class="kpi-sub" style="color:${diff>0?'var(--red)':'var(--green2)'};font-weight:700">${diff>0?'+':''}${diff.toFixed(2)}</div><div class="kpi-sub">${pg[4].length} hoyos</div></div>`; })() : '<div class="kpi" style="padding:12px 8px;text-align:center"><div class="kpi-label">Par 4</div><div class="kpi-val" style="font-size:24px">—</div></div>';
-    const pg5 = pg[5].length ? (() => { const av=pg[5].reduce((s,x)=>s+x,0)/pg[5].length, diff=av-5; return `<div class="kpi" style="padding:12px 8px;text-align:center"><div class="kpi-label">Par 5</div><div class="kpi-val" style="font-size:24px">${av.toFixed(2)}</div><div class="kpi-sub" style="color:${diff>0?'var(--red)':'var(--green2)'};font-weight:700">${diff>0?'+':''}${diff.toFixed(2)}</div><div class="kpi-sub">${pg[5].length} hoyos</div></div>`; })() : '<div class="kpi" style="padding:12px 8px;text-align:center"><div class="kpi-label">Par 5</div><div class="kpi-val" style="font-size:24px">—</div></div>';
-
-    holesSection = `
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
-      ${pg3}${pg4}${pg5}
-    </div>
-    <div class="card" style="padding:12px;margin-bottom:12px;height:170px;position:relative">
-      <div style="font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--gold2);margin-bottom:6px">S/Par por año</div>
-      <canvas id="campo-chart-year" style="height:130px"></canvas>
-    </div>
-    <div style="font-family:'Cormorant Garamond',serif;font-size:17px;color:var(--gold2);margin-bottom:8px">Estadísticas por hoyo</div>
-    ${mcHoleStatsHTML()}
-    <div style="font-family:'Cormorant Garamond',serif;font-size:17px;color:var(--gold2);margin-bottom:8px">Scorecard por vuelta</div>
-    ${mcRoundsHTML()}`;
+    var parTypeCards = [3,4,5].map(function(p) {
+      if (!pg[p].length) return '<div class="kpi" style="padding:12px 8px;text-align:center"><div class="kpi-label">Par '+p+'</div><div class="kpi-val" style="font-size:24px">\u2014</div></div>';
+      var av = pg[p].reduce(function(s,x){return s+x;},0)/pg[p].length;
+      var diff = av - p;
+      return '<div class="kpi" style="padding:12px 8px;text-align:center">'
+        +'<div class="kpi-label">Par '+p+'</div>'
+        +'<div class="kpi-val" style="font-size:24px">'+av.toFixed(2)+'</div>'
+        +'<div class="kpi-sub" style="color:'+(diff>0?'var(--red)':'var(--green2)')+';font-weight:700">'+(diff>0?'+':'')+diff.toFixed(2)+'</div>'
+        +'<div class="kpi-sub">'+pg[p].length+' hoyos</div>'
+        +'</div>';
+    }).join('');
+    holesSection =
+      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">'+parTypeCards+'</div>'
+      +'<div class="card" style="padding:12px;margin-bottom:12px;height:170px;position:relative">'
+        +'<div style="'+CG+';font-size:16px;'+GOLD2s+';margin-bottom:6px">S/Par por a\u00f1o</div>'
+        +'<canvas id="campo-chart-year" style="height:130px"></canvas>'
+      +'</div>'
+      +'<div style="'+CG+';font-size:17px;'+GOLD2s+';margin-bottom:8px">Estad\u00edsticas por hoyo</div>'
+      +mcHoleStatsHTML()
+      +'<div style="'+CG+';font-size:17px;'+GOLD2s+';margin-bottom:8px">Scorecard por vuelta</div>'
+      +mcRoundsHTML();
   } else {
-    holesSection = `
-    <div class="card" style="margin-bottom:12px">
-      <p style="color:var(--muted)">⚠️ Ejecuta <code>update_holes.py</code> y sube <code>data/holes.json</code> a GitHub para ver el scorecard.</p>
-      <div style="margin-top:12px">
-        <table style="width:100%;font-size:13px;border-collapse:collapse">
-          <thead><tr><th style="text-align:left;padding:6px;border-bottom:1px solid var(--border)">Fecha</th><th style="padding:6px;border-bottom:1px solid var(--border)">S/Par</th></tr></thead>
-          <tbody>${rondas.map(r=>'<tr><td style="padding:6px;color:var(--muted)">'+r.date+'</td><td style="padding:6px;text-align:center" class="'+ouCls2(r.ou)+'">'+(r.ou!=null?ouFmt(r.ou):'—')+'</td></tr>').join('')}</tbody>
-        </table>
-      </div>
-    </div>`;
+    holesSection =
+      '<div class="card" style="margin-bottom:12px">'
+      +'<p style="color:var(--muted)">Ejecuta update_holes.py y sube data/holes.json a GitHub.</p>'
+      +'<div style="margin-top:12px"><table style="width:100%;font-size:13px;border-collapse:collapse">'
+      +'<thead><tr><th style="text-align:left;padding:6px;border-bottom:1px solid var(--border)">Fecha</th><th style="padding:6px;border-bottom:1px solid var(--border)">S/Par</th></tr></thead>'
+      +'<tbody>'+rondas.map(function(r){ return '<tr><td style="padding:6px;color:var(--muted)">'+r.date+'</td><td style="padding:6px;text-align:center" class="'+ouCls2(r.ou)+'">'+(r.ou!=null?ouFmt(r.ou):'\u2014')+'</td></tr>'; }).join('')+'</tbody>'
+      +'</table></div></div>';
   }
 
-  const yearTableRows = years.map(y => {
-    const o = byYear[y].ous;
-    const v = o.length ? (o.reduce((a,b)=>a+b,0)/o.length).toFixed(1) : '—';
-    return '<td style="text-align:center;padding:4px 10px;color:' + (parseFloat(v)<=0?'var(--green2)':'var(--red)') + '">' + (parseFloat(v)>0?'+':'') + v + '</td>';
+  var yearTableRows = years.map(function(y) {
+    var o = byYear[y].ous;
+    var v = o.length ? (o.reduce(function(a,b){return a+b;},0)/o.length).toFixed(1) : '\u2014';
+    return '<td style="text-align:center;padding:4px 10px;color:'+(parseFloat(v)<=0?'var(--green2)':'var(--red)')+'">'+((parseFloat(v)>0)?'+':'')+v+'</td>';
   }).join('');
 
   content.innerHTML =
-    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">' +
-      '<div class="kpi" style="padding:12px 10px;text-align:center"><div class="kpi-label">Vueltas</div><div class="kpi-val" style="font-size:28px">' + rondas.length + '</div><div class="kpi-sub">' + rondasH.length + ' con scorecard</div></div>' +
-      '<div class="kpi" style="padding:12px 10px;text-align:center"><div class="kpi-label">Prom. S/Par</div><div class="kpi-val" style="font-size:28px;color:' + (parseFloat(avgOu)<=0?'var(--green2)':'var(--red)') + '">' + (parseFloat(avgOu)>0?'+':'') + avgOu + '</div><div class="kpi-sub">scoring avg</div></div>' +
-      '<div class="kpi" style="padding:12px 10px;text-align:center"><div class="kpi-label">Mejor</div><div class="kpi-val" style="font-size:28px">' + (bestOu>0?'+':'') + bestOu + '</div><div class="kpi-sub">' + (bestR ? bestR.date : '') + '</div></div>' +
-    '</div>' +
-    '<div class="card" style="padding:14px;margin-bottom:12px;overflow-x:auto">' +
-      '<table style="width:100%;font-size:12px;border-collapse:collapse;white-space:nowrap">' +
-        '<tr><td></td>' + years.map(y=>'<th style="padding:4px 10px;color:var(--muted);font-size:11px;text-align:center">'+y+'</th>').join('') + '<th style="padding:4px 10px;color:var(--gold2);font-size:11px">Total</th></tr>' +
-        '<tr><td style="color:var(--muted);font-size:11px;padding:4px 6px"># Vueltas</td>' + years.map(y=>'<td style="text-align:center;padding:4px 10px">'+byYear[y].n+'</td>').join('') + '<td style="font-weight:700;text-align:center;padding:4px 10px">'+rondas.length+'</td></tr>' +
-        '<tr><td style="color:var(--muted);font-size:11px;padding:4px 6px">S/Par avg</td>' + yearTableRows + '<td style="font-weight:700;text-align:center;padding:4px 10px;color:' + (parseFloat(avgOu)<=0?'var(--green2)':'var(--red)') + '">' + (parseFloat(avgOu)>0?'+':'') + avgOu + '</td></tr>' +
-      '</table>' +
-    '</div>' +
-    holesSection;
+    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">'
+    +'<div class="kpi" style="padding:12px 10px;text-align:center"><div class="kpi-label">Vueltas</div><div class="kpi-val" style="font-size:28px">'+rondas.length+'</div><div class="kpi-sub">'+rondasH.length+' con scorecard</div></div>'
+    +'<div class="kpi" style="padding:12px 10px;text-align:center"><div class="kpi-label">Prom. S/Par</div><div class="kpi-val" style="font-size:28px;color:'+(parseFloat(avgOu)<=0?'var(--green2)':'var(--red)')+'">'+((parseFloat(avgOu)>0)?'+':'')+avgOu+'</div><div class="kpi-sub">scoring avg</div></div>'
+    +'<div class="kpi" style="padding:12px 10px;text-align:center"><div class="kpi-label">Mejor</div><div class="kpi-val" style="font-size:28px">'+((bestOu>0)?'+':'')+bestOu+'</div><div class="kpi-sub">'+(bestR?bestR.date:'')+'</div></div>'
+    +'</div>'
+    +'<div class="card" style="padding:14px;margin-bottom:12px;overflow-x:auto">'
+    +'<table style="width:100%;font-size:12px;border-collapse:collapse;white-space:nowrap">'
+    +'<tr><td></td>'+years.map(function(y){ return '<th style="padding:4px 10px;color:var(--muted);font-size:11px;text-align:center">'+y+'</th>'; }).join('')+'<th style="padding:4px 10px;color:var(--gold2);font-size:11px">Total</th></tr>'
+    +'<tr><td style="color:var(--muted);font-size:11px;padding:4px 6px"># Vueltas</td>'+years.map(function(y){ return '<td style="text-align:center;padding:4px 10px">'+byYear[y].n+'</td>'; }).join('')+'<td style="font-weight:700;text-align:center;padding:4px 10px">'+rondas.length+'</td></tr>'
+    +'<tr><td style="color:var(--muted);font-size:11px;padding:4px 6px">S/Par avg</td>'+yearTableRows+'<td style="font-weight:700;text-align:center;padding:4px 10px;color:'+(parseFloat(avgOu)<=0?'var(--green2)':'var(--red)')+'">'+((parseFloat(avgOu)>0)?'+':'')+avgOu+'</td></tr>'
+    +'</table></div>'
+    +holesSection;
 
-  setTimeout(()=>{
-    const ctx=document.getElementById('campo-chart-year');
-    if(ctx){
-      if(ctx._ch)ctx._ch.destroy();
-      const yAvgs=years.map(y=>{const o=byYear[y].ous;return o.length?(o.reduce((a,b)=>a+b,0)/o.length).toFixed(1):null;});
-      ctx._ch=new Chart(ctx,{type:'bar',data:{labels:years,datasets:[
-        {data:yAvgs,backgroundColor:yAvgs.map(v=>parseFloat(v)<=0?'#1e5e3a88':'#c0392b88'),borderRadius:3},
-        {type:'line',data:yAvgs,borderColor:'#9a6e1a',borderWidth:2,pointRadius:3,fill:false,tension:.3}
-      ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+  setTimeout(function() {
+    var ctx = document.getElementById('campo-chart-year');
+    if (ctx) {
+      if (ctx._ch) ctx._ch.destroy();
+      var yAvgs = years.map(function(y) { var o=byYear[y].ous; return o.length?(o.reduce(function(a,b){return a+b;},0)/o.length).toFixed(1):null; });
+      ctx._ch = new Chart(ctx, {type:'bar', data:{labels:years, datasets:[
+        {data:yAvgs, backgroundColor:yAvgs.map(function(v){return parseFloat(v)<=0?'#1e5e3a88':'#c0392b88';}), borderRadius:3},
+        {type:'line', data:yAvgs, borderColor:'#9a6e1a', borderWidth:2, pointRadius:3, fill:false, tension:0.3}
+      ]}, options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
         scales:{x:{grid:{color:'#d4cbb8'},ticks:{color:'#6b6454',font:{size:10}}},
                 y:{grid:{color:'#d4cbb8'},ticks:{color:'#6b6454',font:{size:10}}}}}});
     }
-  },150);
+  }, 150);
 }
 
 
