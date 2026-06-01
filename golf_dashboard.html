@@ -482,9 +482,9 @@ tr.excluded-row td:last-child { text-decoration: none; }
 }
 
 /* ── ROUND CARDS (Vuelta a Vuelta) — all sizes ── */
-/* Table always hidden; cards replace it on all sizes */
+/* Table always hidden; cards replace it */
 #page-rounds .scroll-table { display: none; }
-/* Cards list: layout set here, visibility controlled by JS */
+/* Cards list layout — visibility inherited from parent .page */
 #mobile-rounds-list { display: block; }
 @media (min-width: 769px) {
   #mobile-rounds-list { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -492,7 +492,6 @@ tr.excluded-row td:last-child { text-decoration: none; }
 }
 
 @media (max-width: 768px) {
-  #mobile-rounds-list { display: block; }
   .mr-card {
     background: var(--card); border: 1px solid var(--border); border-radius: 10px;
     margin-bottom: 8px; overflow: hidden; cursor: pointer;
@@ -706,8 +705,8 @@ tr.excluded-row td:last-child { text-decoration: none; }
         </table>
       </div>
     </div>
-  </div>
   <div id="mobile-rounds-list"></div>
+  </div>
 
   <!-- TENDENCIAS -->
   <div id="page-trends" class="page">
@@ -1235,9 +1234,7 @@ function renderRounds() {
     return asc?(va||0)-(vb||0):(vb||0)-(va||0);
   });
   document.getElementById('rounds-count').textContent = rows.length + ' vueltas';
-  // Ensure mobile list is visible
-  var mrl = document.getElementById('mobile-rounds-list');
-  if (mrl) mrl.style.display = window.innerWidth >= 769 ? 'grid' : 'block';
+  // (display handled by CSS)
 
   // Desktop table
   document.getElementById('rounds-tbody').innerHTML = rows.map(r => {
@@ -1431,9 +1428,6 @@ function showRoundDetail(roundId) {
     {label:'Fairways', val:fwPct!=null?(fwPct+'%'):'—',   sub:(r.fwH||0)+'/'+(r.fwT||0)+' fairways'},
   ].map(k=>`<div class="kpi"><div class="kpi-label">${k.label}</div><div class="kpi-val" style="font-size:28px">${k.val}</div><div class="kpi-sub">${k.sub}</div></div>`).join('');
 
-  // Hide mobile rounds list when showing detail
-  var mrl = document.getElementById('mobile-rounds-list');
-  if (mrl) mrl.style.display = '';
 
   var holes = HOLES_DATA[roundId];
   var noEl  = document.getElementById('detail-no-holes');
@@ -1581,9 +1575,7 @@ function showPage(name, el) {
   document.querySelectorAll('.nav-link,.bottom-nav-item').forEach(l=>l.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
   if(el)el.classList.add('active');
-  // Reset inline display on mobile-rounds-list when leaving rounds page
-  var mrl = document.getElementById('mobile-rounds-list');
-  if (mrl && name !== 'rounds') mrl.style.display = '';
+
   if(name==='rounds')   renderRounds();
   if(name==='micampo')  initMiCampo();
   if(name==='mibolsa')  initMiBolsa();
