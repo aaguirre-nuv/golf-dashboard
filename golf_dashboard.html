@@ -564,6 +564,69 @@ tr.excluded-row td:last-child { text-decoration: none; }
   #detail-net-chart-card .chart-wrap { height: 180px !important; }
 }
 
+
+/* ── CAMPOS MÓVIL ── */
+@media (max-width: 768px) {
+  /* Ocultar barras y tabla desktop en móvil */
+  #course-bars-count, #course-bars-score { display: none; }
+  #courses-table { display: none; }
+  #mobile-campos-list { display: block; }
+}
+#mobile-campos-list { display: none; }
+
+/* Sort bar campos */
+.campos-sort-bar {
+  display: none;
+  gap: 6px; overflow-x: auto; scrollbar-width: none;
+  padding: 8px 0 4px; margin-bottom: 8px;
+}
+.campos-sort-bar::-webkit-scrollbar { display: none; }
+@media (max-width: 768px) {
+  .campos-sort-bar { display: flex; }
+}
+.campos-sort-pill {
+  flex-shrink: 0; padding: 5px 12px; border-radius: 20px;
+  border: 1px solid var(--border); background: var(--card2);
+  color: var(--muted); font-family: inherit; font-size: 11px; cursor: pointer;
+}
+.campos-sort-pill.active { background: var(--gold2); color: #fff; border-color: var(--gold2); }
+
+/* Campo card */
+.cc-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 10px; margin-bottom: 8px; overflow: hidden;
+}
+.cc-main-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 12px; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.cc-main-row:active { background: var(--card2); }
+.cc-name-wrap { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 0 0 auto; max-width: 110px; }
+.cc-cname { font-size: 13px; font-weight: 700; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cc-clast { font-size: 10px; color: var(--muted); white-space: nowrap; }
+.cc-main-pills { display: flex; gap: 4px; flex: 1; justify-content: flex-end; }
+.cc-cpill {
+  display: flex; flex-direction: column; align-items: center;
+  background: var(--card2); border-radius: 6px; padding: 4px 7px; min-width: 40px;
+}
+.cc-cpill-label { font-size: 7px; text-transform: uppercase; letter-spacing: .4px; color: var(--muted); line-height: 1; }
+.cc-cpill-val { font-size: 13px; font-weight: 700; line-height: 1.4; color: var(--text); }
+.cc-cpill-val.ou-pos { color: var(--red); }
+.cc-cpill-val.ou-neg { color: var(--green2); }
+.cc-cpill-val.ou-par { color: var(--gold2); }
+.cc-cpill-val.cc-muted { color: var(--muted); font-size: 11px; }
+.cc-chevron { color: var(--muted); font-size: 11px; flex-shrink: 0; transition: transform .25s; }
+.cc-card.cc-open .cc-chevron { transform: rotate(180deg); }
+.cc-extra {
+  max-height: 0; overflow: hidden; transition: max-height .3s ease;
+  border-top: 0px solid var(--border);
+}
+.cc-card.cc-open .cc-extra { max-height: 120px; border-top: 1px solid var(--border); }
+.cc-extra-inner { padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; }
+.cc-extra-pills { display: flex; gap: 4px; flex-wrap: wrap; }
+.cc-note { font-size: 9px; color: var(--muted); }
+
 </style>
 </head>
 <body>
@@ -750,6 +813,18 @@ tr.excluded-row td:last-child { text-decoration: none; }
       <h2>Campos</h2>
       <p>Historial por campo de golf</p>
     </div>
+    <!-- Sort bar móvil -->
+    <div class="campos-sort-bar" id="campos-sort-bar">
+      <button class="campos-sort-pill active" onclick="setCamposSort('count',this)">Vueltas ↓</button>
+      <button class="campos-sort-pill" onclick="setCamposSort('avgOu',this)">S/Par avg</button>
+      <button class="campos-sort-pill" onclick="setCamposSort('bestOu',this)">Mejor</button>
+      <button class="campos-sort-pill" onclick="setCamposSort('avgShots',this)">Golpes</button>
+      <button class="campos-sort-pill" onclick="setCamposSort('avgGir',this)">GIR%</button>
+      <button class="campos-sort-pill" onclick="setCamposSort('lastDate',this)">Reciente</button>
+    </div>
+    <!-- Mobile cards list -->
+    <div id="mobile-campos-list"></div>
+
     <div class="card-grid">
       <div class="card">
         <h3>Top campos por vueltas</h3>
@@ -1341,6 +1416,7 @@ function initCourses() {
      <div class="course-bar-track"><div class="course-bar-fill" style="width:${(c.avgOu-minS+1)/(maxS-minS+2)*100}%;background:${GREEN}"></div></div>
      <div class="course-bar-val ${c.avgOu<0?'ou-neg':''}">${ouFmt(+fmt(c.avgOu))}</div></div>`).join('');
   sortCourses('count');
+  renderCamposMobile();
 }
 function renderCourses() {
   const {col,asc}=coursesSort;
@@ -1357,6 +1433,88 @@ function renderCourses() {
      <td>${c.avgGir!=null?fmt(c.avgGir)+'%':'—'}</td>
      <td>${c.avgPutts!=null?fmt(c.avgPutts):'—'}</td>
      <td>${c.lastDate||'—'}</td></tr>`).join('');
+}
+
+// ── CAMPOS MÓVIL ─────────────────────────────────────────────────
+var _camposSortCol = 'count';
+var _camposSortAsc = false;
+
+function setCamposSort(col, el) {
+  _camposSortAsc = _camposSortCol===col ? !_camposSortAsc : (col==='avgOu'||col==='bestOu'||col==='avgShots');
+  _camposSortCol = col;
+  document.querySelectorAll('.campos-sort-pill').forEach(function(p){p.classList.remove('active');});
+  if(el) el.classList.add('active');
+  renderCamposMobile();
+}
+
+function renderCamposMobile() {
+  var list = document.getElementById('mobile-campos-list');
+  if(!list || !courseData) return;
+
+  var rows = [...courseData];
+  var col = _camposSortCol, asc = _camposSortAsc;
+  rows.sort(function(a,b){
+    var va=a[col], vb=b[col];
+    if(va==null)return 1; if(vb==null)return -1;
+    if(typeof va==='string') return asc?va.localeCompare(vb):vb.localeCompare(va);
+    return asc?va-vb:vb-va;
+  });
+
+  list.innerHTML = rows.map(function(c, i) {
+    var ouCls = function(v){ return v==null?'cc-muted':v<0?'ou-neg':v>0?'ou-pos':'ou-par'; };
+    var ouS   = function(v){ return v!=null?(v>0?'+':'')+fmt(v):'—'; };
+    var fmt   = function(v,d){ d=d||1; return v!=null?v.toFixed(d):'—'; };
+    var fPct  = function(v){ return v!=null?v.toFixed(1)+'%':'—'; };
+
+    // withData: rounds that have hole data (girT > 0)
+    var withData = c.rounds ? c.rounds.filter(function(r){return r.girT>0;}).length : 0;
+    var hasPartial = withData>0 && withData<c.count;
+    var hasNone    = withData===0;
+    var note = hasPartial
+      ? '* stats detallados sobre '+withData+'/'+c.count+' vueltas con Arccos'
+      : hasNone ? '* sin datos de hoyo a hoyo' : '';
+
+    var avgFw = c.rounds ? (function(){
+      var rs=c.rounds.filter(function(r){return r.fwT>0;});
+      return rs.length ? rs.reduce(function(s,r){return s+r.fwH/r.fwT*100;},0)/rs.length : null;
+    })() : null;
+
+    var avgShots = c.rounds ? (function(){
+      var rs=c.rounds.filter(function(r){return r.shots;});
+      return rs.length ? rs.reduce(function(s,r){return s+r.shots;},0)/rs.length : null;
+    })() : null;
+
+    return '<div class="cc-card" id="ccard-'+i+'">'
+      +'<div class="cc-main-row" onclick="toggleCCard('+i+')">'
+        +'<div class="cc-name-wrap">'
+          +'<div class="cc-cname">'+c.course+'</div>'
+          +'<div class="cc-clast">'+(c.lastDate||'')+'</div>'
+        +'</div>'
+        +'<div class="cc-main-pills">'
+          +'<div class="cc-cpill"><span class="cc-cpill-label">Vueltas</span><span class="cc-cpill-val">'+c.count+'</span></div>'
+          +'<div class="cc-cpill"><span class="cc-cpill-label">S/Par</span><span class="cc-cpill-val '+ouCls(c.avgOu)+'">'+ouS(c.avgOu)+'</span></div>'
+          +'<div class="cc-cpill"><span class="cc-cpill-label">Mejor</span><span class="cc-cpill-val '+ouCls(c.bestOu)+'">'+ouS(c.bestOu)+'</span></div>'
+        +'</div>'
+        +'<span class="cc-chevron">▼</span>'
+      +'</div>'
+      +'<div class="cc-extra">'
+        +'<div class="cc-extra-inner">'
+          +'<div class="cc-extra-pills">'
+            +'<div class="cc-cpill"><span class="cc-cpill-label">Golpes</span><span class="cc-cpill-val '+(avgShots==null?'cc-muted':'')+'">'+fmt(avgShots)+'</span></div>'
+            +'<div class="cc-cpill"><span class="cc-cpill-label">GIR%</span><span class="cc-cpill-val '+(c.avgGir==null?'cc-muted':'')+'">'+fPct(c.avgGir)+'</span></div>'
+            +'<div class="cc-cpill"><span class="cc-cpill-label">Putts</span><span class="cc-cpill-val '+(c.avgPutts==null?'cc-muted':'')+'">'+fmt(c.avgPutts)+'</span></div>'
+            +'<div class="cc-cpill"><span class="cc-cpill-label">FW%</span><span class="cc-cpill-val '+(avgFw==null?'cc-muted':'')+'">'+fPct(avgFw)+'</span></div>'
+          +'</div>'
+          +(note?'<div class="cc-note">'+note+'</div>':'')
+        +'</div>'
+      +'</div>'
+    +'</div>';
+  }).join('');
+}
+
+function toggleCCard(i) {
+  var card = document.getElementById('ccard-'+i);
+  if(card) card.classList.toggle('cc-open');
 }
 
 // ── PERSONAL BESTS ────────────────────────────────────────────────
