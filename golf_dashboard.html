@@ -629,6 +629,70 @@ tr.excluded-row td:last-child { text-decoration: none; }
 .cc-extra-pills { display: flex; gap: 4px; flex-wrap: wrap; }
 .cc-note { font-size: 9px; color: var(--muted); }
 
+
+/* ── HÁNDICAP MÓVIL ── */
+@media (max-width: 768px) {
+  /* KPIs: 2 columnas */
+  #hcp-kpis { grid-template-columns: 1fr 1fr !important; gap: 8px !important; margin-bottom: 12px !important; }
+  /* Ocultar tabla y card-grid desktop */
+  #page-handicap .card-grid { display: none !important; }
+  /* Mostrar elementos móvil */
+  #hm-strategy-panel { display: block !important; }
+  #hm-sort-bar        { display: flex !important; }
+  #hm-mobile-list     { display: block !important; }
+}
+#hm-strategy-panel { display: none; margin: 0 0 12px; }
+#hm-sort-bar        { display: none; gap: 6px; margin-bottom: 8px; }
+#hm-mobile-list     { display: none; }
+
+/* Strategy panel */
+.hm-panel { background: var(--card); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 12px; }
+.hm-panel-title { padding: 10px 14px 8px; font-family: 'Cormorant Garamond', serif; font-size: 16px; color: var(--gold2); border-bottom: 1px solid var(--border); }
+.hm-panel-grid { display: grid; grid-template-columns: 1fr 1fr; }
+.hm-panel-item { padding: 12px 14px; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.hm-panel-item:nth-child(2n) { border-right: none; }
+.hm-panel-item.full { grid-column: 1/-1; border-right: none; border-bottom: none; }
+.hm-panel-item:last-child { border-bottom: none; }
+.hm-pi-label { font-size: 9px; text-transform: uppercase; letter-spacing: .6px; color: var(--muted); }
+.hm-pi-val   { font-family: 'Cormorant Garamond', serif; font-size: 26px; font-weight: 700; margin-top: 2px; line-height: 1.1; }
+.hm-pi-sub   { font-size: 10px; color: var(--muted); margin-top: 2px; line-height: 1.3; }
+.hm-alert-banner { margin: 8px 14px; padding: 8px 10px; background: #fff8e8; border: 1px solid #e8d080; border-radius: 6px; font-size: 10px; color: var(--gold2); line-height: 1.4; }
+
+/* Sort pills HM */
+.hm-sort-pill { flex: 1; padding: 6px 8px; border-radius: 8px; border: 1px solid var(--border); background: var(--card2); color: var(--muted); font-family: inherit; font-size: 11px; cursor: pointer; text-align: center; }
+.hm-sort-pill.active { background: var(--gold2); color: #fff; border-color: var(--gold2); }
+
+/* Vuelta HM card */
+.hm-vcard { background: var(--card); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 6px; overflow: hidden; }
+.hm-vcard.hm-top8 { border-color: #1e5e3a; background: linear-gradient(135deg,#f0f8f4 0%,var(--card) 40%); }
+.hm-vcard.hm-v20  { border-color: var(--gold2); background: linear-gradient(135deg,#fdf8ee 0%,var(--card) 40%); }
+.hm-vmain { display: flex; align-items: center; gap: 8px; padding: 10px 12px; }
+.hm-vbadge { display: flex; flex-direction: column; align-items: center; gap: 2px; flex-shrink: 0; }
+.hm-vbadge-n, .hm-vbadge-rk {
+  display: flex; align-items: center; justify-content: center;
+  width: 30px; height: 18px; border-radius: 4px;
+  font-size: 10px; font-weight: 700;
+}
+.hm-vbadge-n.top8  { background: var(--green2); color: #fff; }
+.hm-vbadge-n.v20   { background: var(--card2); border: 1.5px solid var(--gold2); color: var(--gold2); }
+.hm-vbadge-n.normal { background: var(--card2); color: var(--muted); }
+.hm-vbadge-rk.top8  { background: #c8e6d8; color: var(--green2); }
+.hm-vbadge-rk.normal { background: var(--card2); color: var(--muted); }
+.hm-vinfo { flex: 1; min-width: 0; }
+.hm-vcourse { font-size: 12px; font-weight: 700; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hm-vdate  { font-size: 10px; color: var(--muted); }
+.hm-vpills { display: flex; gap: 3px; flex-shrink: 0; }
+.hm-vpill  { display: flex; flex-direction: column; align-items: center; background: var(--card2); border-radius: 6px; padding: 3px 5px; min-width: 34px; }
+.hm-vpill.dif-good { background: #e8f4ee; }
+.hm-vpill-label { font-size: 7px; text-transform: uppercase; letter-spacing: .3px; color: var(--muted); line-height: 1; }
+.hm-vpill-val   { font-size: 12px; font-weight: 700; line-height: 1.4; color: var(--text); }
+.hm-vpill-val.dif-good { color: var(--green2); }
+.hm-vtags { display: flex; gap: 4px; padding: 0 12px 8px; flex-wrap: wrap; }
+.hm-vtag  { font-size: 9px; padding: 2px 6px; border-radius: 3px; font-weight: 600; }
+.hm-tag-top8    { background: #e8f4ee; color: var(--green2); }
+.hm-tag-v20     { background: #fdf8ee; color: var(--gold2); }
+.hm-tag-special { background: #fde8e8; color: var(--red); }
+
 </style>
 </head>
 <body>
@@ -961,6 +1025,17 @@ tr.excluded-row td:last-child { text-decoration: none; }
       <p id="hcp-sub">Sistema WHS · cargando...</p>
     </div>
     <div class="kpi-grid" id="hcp-kpis" style="margin-bottom:20px"></div>
+
+    <!-- Mobile: strategy panel -->
+    <div id="hm-strategy-panel"></div>
+
+    <!-- Mobile: sort + cards -->
+    <div id="hm-sort-bar">
+      <button class="hm-sort-pill active" onclick="setHmSort('n',this)"># Cronológico</button>
+      <button class="hm-sort-pill" onclick="setHmSort('rk',this)">★ Ranking dif.</button>
+    </div>
+    <div id="hm-mobile-list"></div>
+
     <div class="card-grid" style="margin-bottom:16px">
 
       <!-- Tabla 20 vueltas -->
@@ -2409,6 +2484,136 @@ function renderHandicap() {
       'text-align:center;padding:4px;letter-spacing:.5px;text-transform:uppercase">'+
       '— Historial anterior (no computan) —</td></tr>');
   }
+
+  // ── MÓVIL: strategy panel + cards ──
+  renderHmMobile();
+}
+
+// ── HM MÓVIL ─────────────────────────────────────────────────────
+var _hmSort = 'n';
+
+function setHmSort(s, el) {
+  _hmSort = s;
+  document.querySelectorAll('.hm-sort-pill').forEach(function(p){p.classList.remove('active');});
+  if(el) el.classList.add('active');
+  renderHmMobile();
+}
+
+function renderHmMobile() {
+  var d = HCP_DATA;
+  if(!d) return;
+
+  var counting = d.rounds.filter(function(r){return r.counting;});
+  if(!counting.length) return;
+
+  // Assign sequential # (1=most recent) and ranking by dif
+  var sorted_dif = counting.slice().sort(function(a,b){
+    return (a.diferencial||99)-(b.diferencial||99);
+  });
+  counting.forEach(function(r,i){ r._n = i+1; });
+  sorted_dif.forEach(function(r,i){ r._rk = i+1; });
+
+  var top8ids = new Set(counting.filter(function(r){return r.inBest8;}).map(function(r){return r._n;}));
+  var dif8    = sorted_dif[7] ? sorted_dif[7].diferencial : null;
+  var v20     = counting[counting.length-1];
+  var v20inTop8 = v20 && top8ids.has(v20._n);
+
+  // Umbral de corte
+  var cutoffDif, cutoffLabel;
+  if(v20inTop8) {
+    cutoffDif   = sorted_dif[8] ? sorted_dif[8].diferencial : null;
+    cutoffLabel = 'Dif. #9 actual (nueva #8 si juegas)';
+  } else {
+    cutoffDif   = dif8;
+    cutoffLabel = 'Dif. #8 · umbral Top 8';
+  }
+
+  // Vueltas gratis: desde la #20 hacia atrás, cuántas tienen dif >= dif8 y no son Top8
+  var freeCount = 0;
+  for(var i=counting.length-1; i>=0; i--) {
+    var r=counting[i];
+    if(r.diferencial!=null && dif8!=null && r.diferencial>=dif8 && !top8ids.has(r._n)) {
+      freeCount++;
+    } else { break; }
+  }
+
+  // ── Strategy panel ──
+  var freeColor = freeCount>=3?'color:var(--green2)':freeCount>=1?'color:var(--gold2)':'color:var(--red)';
+  var freeMsg   = freeCount===0?'La siguiente vuelta siempre afecta al HM'
+    : freeCount===1?'1 vuelta más sin riesgo de subir HM'
+    : freeCount+' vueltas más sin riesgo de subir HM';
+
+  var banner = v20inTop8
+    ? '<div class="hm-alert-banner">⚠️ La vuelta #20 está en el Top 8. Si juegas, pierdes esa vuelta del cálculo y el umbral sube al dif. de la #9 ('+
+      (cutoffDif!=null?cutoffDif.toFixed(1):'—')+').</div>'
+    : '';
+
+  var panelEl = document.getElementById('hm-strategy-panel');
+  if(panelEl) panelEl.innerHTML =
+    '<div class="hm-panel">'
+    +'<div class="hm-panel-title">Análisis próxima vuelta</div>'
+    + banner
+    +'<div class="hm-panel-grid">'
+      +'<div class="hm-panel-item">'
+        +'<div class="hm-pi-label">Vuelta #20 sale</div>'
+        +'<div class="hm-pi-val" style="color:var(--gold2)">'+(v20&&v20.diferencial!=null?v20.diferencial.toFixed(1):'—')+'</div>'
+        +'<div class="hm-pi-sub">'+(v20?(v20.campo||v20.event||'').substring(0,22):'')+'<br>'
+          +(v20inTop8?'<span style="color:var(--red);font-weight:700">⚠ En el Top 8</span>':'<span style="color:var(--muted)">No en el Top 8</span>')+'</div>'
+      +'</div>'
+      +'<div class="hm-panel-item">'
+        +'<div class="hm-pi-label">Umbral de corte</div>'
+        +'<div class="hm-pi-val" style="color:var(--green2)">'+(cutoffDif!=null?cutoffDif.toFixed(1):'—')+'</div>'
+        +'<div class="hm-pi-sub">'+cutoffLabel+'</div>'
+      +'</div>'
+      +'<div class="hm-panel-item full">'
+        +'<div class="hm-pi-label">Vueltas sin riesgo disponibles</div>'
+        +'<div class="hm-pi-val" style="'+freeColor+'">'+freeCount+'</div>'
+        +'<div class="hm-pi-sub">'+freeMsg+'</div>'
+      +'</div>'
+    +'</div>'
+    +'</div>';
+
+  // ── Round cards ──
+  var rows = counting.slice();
+  if(_hmSort==='rk') rows.sort(function(a,b){return a._rk-b._rk;});
+
+  var listEl = document.getElementById('hm-mobile-list');
+  if(!listEl) return;
+  listEl.innerHTML = rows.map(function(r) {
+    var isTop8  = top8ids.has(r._n);
+    var isV20   = r._n === counting.length;
+    var dif     = r.diferencial;
+    var difStr  = dif!=null?dif.toFixed(1):'—';
+    var difGood = dif!=null && cutoffDif!=null && dif<cutoffDif;
+    var campo   = (r.campo||r.event||'').replace(/^TORNEO\s+/i,'');
+
+    var nCls  = isTop8?'top8':isV20?'v20':'normal';
+    var rkCls = isTop8?'top8':'normal';
+
+    var tags = '';
+    if(isTop8 && !isV20) tags += '<span class="hm-vtag hm-tag-top8">Top 8 · computa</span>';
+    if(isV20 && !isTop8)  tags += '<span class="hm-vtag hm-tag-v20">Vuelta #20 · próxima en salir</span>';
+    if(isV20 && isTop8)   tags += '<span class="hm-vtag hm-tag-top8">Top 8</span><span class="hm-vtag hm-tag-v20">#20 · sale</span><span class="hm-vtag hm-tag-special">⚠ HM puede subir</span>';
+
+    return '<div class="hm-vcard'+(isTop8?' hm-top8':'')+(isV20?' hm-v20':'')+'">'
+      +'<div class="hm-vmain">'
+        +'<div class="hm-vbadge">'
+          +'<div class="hm-vbadge-n '+nCls+'">#'+r._n+'</div>'
+          +'<div class="hm-vbadge-rk '+rkCls+'">R'+r._rk+'</div>'
+        +'</div>'
+        +'<div class="hm-vinfo">'
+          +'<div class="hm-vcourse">'+campo+'</div>'
+          +'<div class="hm-vdate">'+r.date+'</div>'
+        +'</div>'
+        +'<div class="hm-vpills">'
+          +'<div class="hm-vpill"><span class="hm-vpill-label">Bruto</span><span class="hm-vpill-val">'+(r.gross||'—')+'</span></div>'
+          +'<div class="hm-vpill"><span class="hm-vpill-label">Stb</span><span class="hm-vpill-val">'+(r.stableford||'—')+'</span></div>'
+          +'<div class="hm-vpill'+(difGood?' dif-good':'')+'"><span class="hm-vpill-label">Dif.</span><span class="hm-vpill-val'+(difGood?' dif-good':'')+'">'+difStr+'</span></div>'
+        +'</div>'
+      +'</div>'
+      +(tags?'<div class="hm-vtags">'+tags+'</div>':'')
+    +'</div>';
+  }).join('');
 }
 
 // ── SIMULADOR ─────────────────────────────────────────────────────
