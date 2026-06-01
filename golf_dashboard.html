@@ -1389,9 +1389,12 @@ function buildCourseData() {
     const girs=c.rounds.filter(r=>r.girT>0).map(r=>r.gir/r.girT*100);
     const putts=c.rounds.filter(r=>r.putts).map(r=>r.putts);
     const dates=c.rounds.map(r=>r.date).sort();
-    return {course:c.course,count:c.rounds.length,
+    const shots=c.rounds.filter(r=>r.shots).map(r=>r.shots);
+    const fws=c.rounds.filter(r=>r.fwT>0).map(r=>r.fwH/r.fwT*100);
+    return {course:c.course,count:c.rounds.length,rounds:c.rounds,
       avgOu:ous.length?avg(ous):null, bestOu:ous.length?Math.min(...ous):null,
       avgGir:girs.length?avg(girs):null, avgPutts:putts.length?avg(putts):null,
+      avgShots:shots.length?avg(shots):null, avgFw:fws.length?avg(fws):null,
       lastDate:dates[dates.length-1]};
   });
 }
@@ -1466,23 +1469,14 @@ function renderCamposMobile() {
     var fmt   = function(v,d){ d=d||1; return v!=null?v.toFixed(d):'—'; };
     var fPct  = function(v){ return v!=null?v.toFixed(1)+'%':'—'; };
 
-    // withData: rounds that have hole data (girT > 0)
     var withData = c.rounds ? c.rounds.filter(function(r){return r.girT>0;}).length : 0;
     var hasPartial = withData>0 && withData<c.count;
     var hasNone    = withData===0;
     var note = hasPartial
-      ? '* stats detallados sobre '+withData+'/'+c.count+' vueltas con Arccos'
+      ? '* stats sobre '+withData+'/'+c.count+' vueltas con datos Arccos'
       : hasNone ? '* sin datos de hoyo a hoyo' : '';
-
-    var avgFw = c.rounds ? (function(){
-      var rs=c.rounds.filter(function(r){return r.fwT>0;});
-      return rs.length ? rs.reduce(function(s,r){return s+r.fwH/r.fwT*100;},0)/rs.length : null;
-    })() : null;
-
-    var avgShots = c.rounds ? (function(){
-      var rs=c.rounds.filter(function(r){return r.shots;});
-      return rs.length ? rs.reduce(function(s,r){return s+r.shots;},0)/rs.length : null;
-    })() : null;
+    var avgShots = c.avgShots;
+    var avgFw    = c.avgFw;
 
     return '<div class="cc-card" id="ccard-'+i+'">'
       +'<div class="cc-main-row" onclick="toggleCCard('+i+')">'
