@@ -481,6 +481,77 @@ tr.excluded-row td:last-child { text-decoration: none; }
   .club-dist { font-size: 16px; }
 }
 
+/* ── MOBILE ROUND CARDS (Vuelta a Vuelta) ── */
+@media (max-width: 768px) {
+  /* Hide desktop table, show cards */
+  #page-rounds .scroll-table { display: none !important; }
+  #mobile-rounds-list { display: block !important; }
+
+  .mr-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+    margin-bottom: 8px; overflow: hidden; cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .mr-card:active { background: var(--card2); }
+  .mr-card.mr-excluded { opacity: .5; }
+  .mr-card-inner { padding: 10px 12px; display: flex; align-items: center; gap: 8px; }
+  .mr-info { display: flex; flex-direction: column; justify-content: center; gap: 2px; min-width: 0; flex: 0 0 auto; max-width: 108px; }
+  .mr-course { font-size: 13px; font-weight: 700; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.2; }
+  .mr-date { font-size: 10px; color: var(--muted); white-space: nowrap; }
+  .mr-pills { display: flex; gap: 4px; flex: 1; justify-content: flex-end; }
+  .mr-pill { display: flex; flex-direction: column; align-items: center; background: var(--card2); border-radius: 6px; padding: 5px 6px; min-width: 40px; }
+  .mr-pill-label { font-size: 7px; text-transform: uppercase; letter-spacing: .4px; color: var(--muted); line-height: 1; }
+  .mr-pill-val { font-size: 13px; font-weight: 700; line-height: 1.4; color: var(--text); }
+  .mr-pill-val.ou-pos { color: var(--red); }
+  .mr-pill-val.ou-neg { color: var(--green2); }
+  .mr-pill-val.ou-par { color: var(--gold2); }
+  .mr-excl {
+    background: none; border: 1px solid var(--border); color: var(--muted);
+    border-radius: 6px; padding: 4px 6px; font-size: 11px; cursor: pointer;
+    font-family: inherit; flex-shrink: 0;
+  }
+  .mr-excl.excluded { background: #f0e8e8; border-color: var(--red); color: var(--red); }
+}
+/* Hidden on desktop */
+#mobile-rounds-list { display: none; }
+
+
+/* ── PGA SCORECARD (detail view) ── */
+.pga-sc { background:var(--card); border:1px solid var(--border); border-radius:8px; overflow:hidden; margin-bottom:16px; }
+.pga-sc-legend { display:flex; gap:8px; flex-wrap:wrap; padding:8px 12px; border-bottom:1px solid var(--border); background:var(--card2); }
+.pga-sc-leg { display:flex; align-items:center; gap:4px; font-size:10px; color:var(--muted); }
+.pga-sc-dot { width:18px; height:18px; border-radius:3px; display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:700; flex-shrink:0; }
+.pga-dot-eagle  { background:#006db3; color:#fff; border-radius:50%; }
+.pga-dot-birdie { background:#e8192c; color:#fff; border-radius:50%; }
+.pga-dot-par    { border:1.5px solid var(--border); color:var(--muted); }
+.pga-dot-bogey  { background:#3d3530; color:#fff; }
+.pga-dot-double { background:#1a0a00; color:#fff; outline:2px solid #555; outline-offset:1px; }
+.pga-sc-half { padding:8px 10px; }
+.pga-sc-label { font-size:9px; text-transform:uppercase; letter-spacing:.6px; color:var(--muted); margin-bottom:5px; }
+.pga-sc-row { display:flex; gap:2px; align-items:center; margin-bottom:2px; }
+.pga-sc-rlabel { width:38px; font-size:9px; color:var(--muted); flex-shrink:0; text-transform:uppercase; }
+.pga-sc-cell { flex:1; min-width:0; height:30px; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; border-radius:3px; }
+.pga-sc-cell.ch { background:var(--card2); font-size:10px; font-weight:500; color:var(--muted); height:18px; }
+.pga-sc-cell.cp { background:transparent; font-size:10px; font-weight:500; color:var(--muted); height:18px; }
+.pga-sc-cell.cs { background:var(--card2); font-size:12px; color:var(--gold2); }
+.pga-sc-eagle  { background:#006db3; color:#fff; border-radius:50%; }
+.pga-sc-birdie { background:#e8192c; color:#fff; border-radius:50%; }
+.pga-sc-par    { border:1.5px solid var(--border); color:var(--text); background:transparent; }
+.pga-sc-bogey  { background:#3d3530; color:#fff; }
+.pga-sc-double { background:#1a0a00; color:#fff; outline:2px solid #555; outline-offset:1px; }
+.pga-sc-triple { background:#0d0500; color:#f0a0a0; outline:2px solid var(--red); outline-offset:1px; }
+.pga-sc-unk    { background:var(--card2); color:var(--muted); }
+.pga-sc-divider { height:1px; background:var(--border); margin:0 10px; }
+.pga-sc-totrow { display:flex; justify-content:space-around; padding:10px 12px; border-top:2px solid var(--border); background:var(--card2); }
+.pga-sc-tot { text-align:center; }
+.pga-sc-tot-label { font-size:9px; text-transform:uppercase; letter-spacing:.4px; color:var(--muted); }
+.pga-sc-tot-val { font-family:'Cormorant Garamond',serif; font-size:20px; font-weight:700; margin-top:2px; }
+.pga-sc-resrow { display:flex; border-top:1px solid var(--border); }
+.pga-sc-res { flex:1; text-align:center; padding:8px 4px; border-right:1px solid var(--border); }
+.pga-sc-res:last-child { border-right:none; }
+.pga-sc-res-label { font-size:8px; text-transform:uppercase; letter-spacing:.3px; color:var(--muted); }
+.pga-sc-res-val { font-size:14px; font-weight:700; margin-top:2px; }
+
 </style>
 </head>
 <body>
@@ -623,6 +694,7 @@ tr.excluded-row td:last-child { text-decoration: none; }
       </div>
     </div>
   </div>
+  <div id="mobile-rounds-list"></div>
 
   <!-- TENDENCIAS -->
   <div id="page-trends" class="page">
@@ -730,24 +802,14 @@ tr.excluded-row td:last-child { text-decoration: none; }
       <p id="detail-sub"></p>
     </div>
     <div class="kpi-grid" id="detail-kpis"></div>
-    <div class="card-grid">
-      <div class="card">
-        <h3>Scorecard por hoyo</h3>
-        <div class="tbl-wrap">
-          <table id="detail-scorecard">
-            <thead><tr>
-              <th>Hoyo</th><th>Golpes</th><th>Putts</th>
-              <th>GIR</th><th>Fairway</th>
-            </tr></thead>
-            <tbody id="detail-scorecard-body"></tbody>
-          </table>
-        </div>
-      </div>
-      <div class="card">
-        <h3>Distribución por hoyo</h3>
-        <div class="chart-wrap"><canvas id="detail-chart"></canvas></div>
-      </div>
+    <!-- Net chart (mobile-first, visible on all sizes) -->
+    <div class="card" style="margin-bottom:16px" id="detail-net-chart-card">
+      <h3>Resultado vs par por hoyo</h3>
+      <div class="chart-wrap" style="height:200px"><canvas id="detail-chart"></canvas></div>
     </div>
+    <!-- PGA scorecard (replaces old table on mobile; shown on all) -->
+    <div id="detail-pga-scorecard"></div>
+    <!-- No holes fallback -->
     <div id="detail-no-holes" class="card" style="display:none">
       <p style="color:var(--muted)">⚠️ Datos de hoyo a hoyo no disponibles para esta vuelta.<br>
       Ejecuta <code style="color:var(--gold)">python update_holes.py</code> en tu carpeta para cargarlos.</p>
@@ -1159,17 +1221,47 @@ function renderRounds() {
     return asc?(va||0)-(vb||0):(vb||0)-(va||0);
   });
   document.getElementById('rounds-count').textContent = rows.length + ' vueltas';
+
+  // Desktop table
   document.getElementById('rounds-tbody').innerHTML = rows.map(r => {
     const girPct = r.girT>0 ? Math.round(r.gir/r.girT*100) : null;
     const fwPct  = r.fwT>0  ? Math.round(r.fwH/r.fwT*100)  : null;
     const excl   = EXCLUDED_IDS.has(r.id);
-    return `<tr onclick="showRoundDetail(${r.id})" style="cursor:pointer" class="${excl?'excluded-row':''}">
-      <td>${r.pais||'—'}</td><td>${r.date}</td><td>${r.course}${r.src==='xls'?' <span style="color:var(--muted);font-size:10px">XLS</span>':''}</td>
-      <td>${r.holes}</td><td>${r.shots||'—'}</td>
-      <td class="${ouColor(r.ou)}">${r.ou!=null?ouFmt(r.ou):'—'}</td>
-      <td>${r.putts||'—'}</td><td>${girPct!=null?girPct+'%':'—'}</td><td>${fwPct!=null?fwPct+'%':'—'}</td>
-      <td onclick="event.stopPropagation()"><button class="btn-excl ${excl?'excluded':''}" onclick="toggleExclusion(${r.id})" title="${excl?'Incluir':'Excluir (scramble/match play)'}">${excl?'✓':'⊘'}</button></td>
-    </tr>`;
+    return '<tr onclick="showRoundDetail('+r.id+')" style="cursor:pointer" class="'+(excl?'excluded-row':'')+'">'
+      +'<td>'+(r.pais||'—')+'</td><td>'+r.date+'</td>'
+      +'<td>'+r.course+(r.src==='xls'?' <span style="color:var(--muted);font-size:10px">XLS</span>':'')+'</td>'
+      +'<td>'+r.holes+'</td><td>'+(r.shots||'—')+'</td>'
+      +'<td class="'+ouColor(r.ou)+'">'+(r.ou!=null?ouFmt(r.ou):'—')+'</td>'
+      +'<td>'+(r.putts||'—')+'</td>'
+      +'<td>'+(girPct!=null?girPct+'%':'—')+'</td>'
+      +'<td>'+(fwPct!=null?fwPct+'%':'—')+'</td>'
+      +'<td onclick="event.stopPropagation()"><button class="btn-excl '+(excl?'excluded':'')+'" onclick="toggleExclusion('+r.id+')" title="'+(excl?'Incluir':'Excluir')+'">'+(excl?'✓':'⊘')+'</button></td>'
+      +'</tr>';
+  }).join('');
+
+  // Mobile cards
+  document.getElementById('mobile-rounds-list').innerHTML = rows.map(function(r) {
+    var excl   = EXCLUDED_IDS.has(r.id);
+    var girPct = r.girT>0 ? Math.round(r.gir/r.girT*100) : null;
+    var fwPct  = r.fwT>0  ? Math.round(r.fwH/r.fwT*100)  : null;
+    var ouCls  = r.ou<0?'ou-neg':r.ou>0?'ou-pos':'ou-par';
+    var ouS    = r.ou!=null?(r.ou>0?'+':'')+r.ou:'—';
+    return '<div class="mr-card'+(excl?' mr-excluded':'')+'" onclick="showRoundDetail('+r.id+')">'
+      +'<div class="mr-card-inner">'
+        +'<div class="mr-info">'
+          +'<span class="mr-course">'+r.course+'</span>'
+          +'<span class="mr-date">'+r.date+(r.src==='xls'?' <span style="font-size:9px;color:var(--muted)">XLS</span>':'')+'</span>'
+        +'</div>'
+        +'<div class="mr-pills">'
+          +'<div class="mr-pill"><span class="mr-pill-label">S/Par</span><span class="mr-pill-val '+ouCls+'">'+ouS+'</span></div>'
+          +'<div class="mr-pill"><span class="mr-pill-label">Golpes</span><span class="mr-pill-val">'+(r.shots||'—')+'</span></div>'
+          +'<div class="mr-pill"><span class="mr-pill-label">Putts</span><span class="mr-pill-val">'+(r.putts||'—')+'</span></div>'
+          +'<div class="mr-pill"><span class="mr-pill-label">GIR</span><span class="mr-pill-val" style="color:'+(girPct!=null&&girPct>=50?'var(--green2)':'var(--text)')+'">'+(girPct!=null?girPct+'%':'—')+'</span></div>'
+          +'<div class="mr-pill"><span class="mr-pill-label">FW</span><span class="mr-pill-val" style="color:'+(fwPct!=null&&fwPct>=50?'var(--green2)':'var(--text)')+'">'+(fwPct!=null?fwPct+'%':'—')+'</span></div>'
+        +'</div>'
+        +'<button class="mr-excl'+(excl?' excluded':'')+'" onclick="event.stopPropagation();toggleExclusion('+r.id+')" title="'+(excl?'Incluir':'Excluir')+'">'+(excl?'✓':'⊘')+'</button>'
+      +'</div>'
+    +'</div>';
   }).join('');
 }
 
@@ -1322,53 +1414,134 @@ function showRoundDetail(roundId) {
     {label:'Fairways', val:fwPct!=null?(fwPct+'%'):'—',   sub:(r.fwH||0)+'/'+(r.fwT||0)+' fairways'},
   ].map(k=>`<div class="kpi"><div class="kpi-label">${k.label}</div><div class="kpi-val" style="font-size:28px">${k.val}</div><div class="kpi-sub">${k.sub}</div></div>`).join('');
 
-  const holes = HOLES_DATA[roundId];
-  const noEl  = document.getElementById('detail-no-holes');
+  var holes = HOLES_DATA[roundId];
+  var noEl  = document.getElementById('detail-no-holes');
+  var netChartCard = document.getElementById('detail-net-chart-card');
+  var pgaWrap = document.getElementById('detail-pga-scorecard');
+
   if (holes && holes.length>0) {
     noEl.style.display = 'none';
-    const pgaClass = (s,p) => { if(!p)return''; const d=s-p; return d<=-2?'score-eagle':d===-1?'score-birdie':d===0?'score-par':d===1?'score-bogey':'score-double'; };
-    const holeColor = (s,p) => { if(!p)return'#c9a84c88'; const d=s-p; return d<=-2?'#006db3':d===-1?'#e8192c':d===0?'#aaa89a':d===1?'#6b5a3e':'#3d2810'; };
-    document.querySelector('#detail-scorecard thead tr').innerHTML =
-      '<th>Hoyo</th><th>Par</th><th>Golpes</th><th>Putts</th><th>GIR</th><th>Fairway</th>';
-    document.getElementById('detail-scorecard-body').innerHTML = holes.map((h,i) => {
-      const cls = pgaClass(h.s,h.par);
-      const fw  = h.fw===1?'<span style="color:#2d6a4f">✓</span>':h.fw===2?'→':h.fw===3?'←':'—';
-      return `<tr><td style="color:#7a6e5a">${h.h||i+1}</td><td style="color:#7a6e5a">${h.par||'—'}</td>
-        <td>${cls?`<span class="${cls}">${h.s}</span>`:h.s||'—'}</td>
-        <td>${h.p||'—'}</td><td>${h.gir?'<span style="color:#2d6a4f">✓</span>':'—'}</td><td>${fw}</td></tr>`;
-    }).join('');
-    // Stats por par
-    const byPar={3:[],4:[],5:[]}; let eagles=0,birdies=0,pars=0,bogeys=0,doubles=0;
-    holes.forEach(h=>{
-      if(h.par&&byPar[h.par])byPar[h.par].push(h);
-      if(!h.par)return; const d=h.s-h.par;
-      if(d<=-2)eagles++;else if(d===-1)birdies++;else if(d===0)pars++;else if(d===1)bogeys++;else doubles++;
+    netChartCard.style.display = 'block';
+
+    // ── NET SCORE CHART ──────────────────────────────────────
+    function netColor(d) {
+      if(d<=-2) return '#006db3';
+      if(d===-1) return '#e8192c';
+      if(d===0)  return '#9a9186';
+      if(d===1)  return '#6b5a3e';
+      return '#1a0a00';
+    }
+    var netVals = holes.map(function(h){ return h.par ? h.s-h.par : null; });
+    var barColors = netVals.map(function(d){ return d!=null?netColor(d):'#ccc'; });
+    var labels = holes.map(function(h){ return ['H'+(h.h||''), 'P'+(h.par||'?')]; });
+    var validNet = netVals.filter(function(v){return v!=null;});
+    var ctx = document.getElementById('detail-chart');
+    if(ctx._ch) ctx._ch.destroy();
+    ctx._ch = new Chart(ctx, {
+      type:'bar',
+      data:{ labels:labels, datasets:[{ data:netVals, backgroundColor:barColors, borderRadius:3, borderSkipped:false }]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},
+          tooltip:{callbacks:{
+            title:function(items){var h=holes[items[0].dataIndex];return 'Hoyo '+(h.h||'')+' (Par '+(h.par||'?')+')';},
+            label:function(item){var d=item.raw;if(d==null)return '—';var lbl=d<=-2?'Eagle':d===-1?'Birdie':d===0?'Par':d===1?'Bogey':'+'+d;return (d>0?'+':'')+d+' ('+lbl+')';}
+          }}},
+        scales:{
+          x:{grid:{color:'#d4cbb820'},ticks:{color:'#6b6454',font:{size:9},maxRotation:0}},
+          y:{grid:{color:function(c){return c.tick.value===0?'#9a6e1a':'#d4cbb820';},
+                   lineWidth:function(c){return c.tick.value===0?2:1;}},
+             ticks:{color:'#6b6454',font:{size:10},stepSize:1,
+               callback:function(v){return v===0?'Par':(v>0?'+':'')+v;}},
+             min:Math.min(-2,validNet.length?Math.min.apply(null,validNet)-0.5:-2),
+             max:Math.max(4, validNet.length?Math.max.apply(null,validNet)+0.5:4)}
+        }}
     });
-    const ps = p => {
-      const hs=byPar[p]; if(!hs.length)return `<div class="par-stat-box"><div class="pst-title">Par ${p}</div><div class="pst-par">—</div></div>`;
-      const a=(hs.reduce((s,h)=>s+h.s,0)/hs.length).toFixed(1), vp=hs.reduce((s,h)=>s+(h.s-h.par),0);
-      return `<div class="par-stat-box"><div class="pst-title">Par ${p}</div><div class="pst-par">${a}</div><div class="pst-detail">${hs.length} hoyos · ${vp>0?'+':''}${vp} total</div></div>`;
-    };
-    const scoreCard = document.getElementById('detail-scorecard').closest('.card');
-    // Eliminar stats anteriores si las hay
-    scoreCard.querySelectorAll('.par-stats-wrap').forEach(el=>el.remove());
-    scoreCard.insertAdjacentHTML('beforeend', `<div class="par-stats-wrap"><div style="margin-top:16px"><div style="font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#7a6e5a;margin-bottom:6px">Promedio por tipo de hoyo</div><div class="par-stats">${ps(3)}${ps(4)}${ps(5)}</div></div><div style="margin-top:14px"><div style="font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#7a6e5a;margin-bottom:8px">Resultados</div><div class="result-summary">${eagles?`<div class="rs-item"><span class="rs-badge score-eagle" style="border-radius:50%;width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center">${eagles}</span> Eagle${eagles>1?'s':''}</div>`:''} ${birdies?`<div class="rs-item"><span class="rs-badge score-birdie" style="border-radius:50%;width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center">${birdies}</span> Birdie${birdies>1?'s':''}</div>`:''} ${pars?`<div class="rs-item"><span style="font-weight:700;color:#1a1a1a">${pars}</span> Par${pars>1?'es':''}</div>`:''} ${bogeys?`<div class="rs-item"><span class="rs-badge score-bogey" style="width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center">${bogeys}</span> Bogey${bogeys>1?'s':''}</div>`:''} ${doubles?`<div class="rs-item"><span class="rs-badge score-double" style="width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center">${doubles}</span> Doble+</div>`:''}</div></div></div>`);
-    // Gráfica
-    const ctx = document.getElementById('detail-chart');
-    if(ctx._ch)ctx._ch.destroy();
-    ctx._ch = new Chart(ctx, {type:'bar', data:{
-      labels:holes.map(h=>'H'+(h.h||'')),
-      datasets:[
-        {label:'Golpes',data:holes.map(h=>h.s),backgroundColor:holes.map(h=>holeColor(h.s,h.par)),borderRadius:3,order:2},
-        {label:'Par',data:holes.map(h=>h.par||null),type:'line',borderColor:'#8b6914',borderWidth:2.5,
-         borderDash:[6,3],pointBackgroundColor:'#8b6914',pointRadius:4,fill:false,order:1,tension:0}
-      ]
-    }, options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:true,labels:{color:'#6b6454',boxWidth:12}},
-        tooltip:{callbacks:{label:(ctx)=>{const h=holes[ctx.dataIndex];if(!h)return'';const d=h.par?h.s-h.par:null;
-          return d===null?h.s+' golpes':d<=-2?h.s+' (Eagle!)':d===-1?h.s+' (Birdie)':d===0?h.s+' (Par)':d===1?h.s+' (Bogey)':h.s+' (+'+d+')';}}}},
-      scales:{x:{grid:{color:'#d4cbb8'},ticks:{color:'#6b6454'}},y:{grid:{color:'#d4cbb8'},ticks:{color:'#6b6454'},beginAtZero:true}}}});
-  } else { noEl.style.display='block'; }
+
+    // ── PGA SCORECARD ────────────────────────────────────────
+    function pgaSCClass(s,p) {
+      if(!p||!s) return 'pga-sc-unk';
+      var d=s-p;
+      if(d<=-2) return 'pga-sc-eagle';
+      if(d===-1) return 'pga-sc-birdie';
+      if(d===0)  return 'pga-sc-par';
+      if(d===1)  return 'pga-sc-bogey';
+      if(d===2)  return 'pga-sc-double';
+      return 'pga-sc-triple';
+    }
+    var front = holes.filter(function(h){return h.h<=9;});
+    var back  = holes.filter(function(h){return h.h>9;});
+    var sumS  = function(arr){return arr.reduce(function(s,h){return s+(h.s||0);},0);};
+    var sumPar= function(arr){return arr.reduce(function(s,h){return s+(h.par||0);},0);};
+    var sumPt = function(arr){return arr.reduce(function(s,h){return s+(h.p||0);},0);};
+
+    function renderPGAHalf(hs, lbl) {
+      var tot=sumS(hs), parTot=sumPar(hs), ouH=tot-parTot;
+      return '<div class="pga-sc-half">'
+        +'<div class="pga-sc-label">'+lbl+'</div>'
+        +'<div class="pga-sc-row"><div class="pga-sc-rlabel">Hoyo</div>'
+          +hs.map(function(h){return '<div class="pga-sc-cell ch">'+h.h+'</div>';}).join('')
+          +'<div class="pga-sc-cell ch" style="background:var(--border)">&nbsp;</div></div>'
+        +'<div class="pga-sc-row"><div class="pga-sc-rlabel">Par</div>'
+          +hs.map(function(h){return '<div class="pga-sc-cell cp">'+h.par+'</div>';}).join('')
+          +'<div class="pga-sc-cell cp" style="color:var(--gold2);font-weight:700">'+parTot+'</div></div>'
+        +'<div class="pga-sc-row"><div class="pga-sc-rlabel" style="color:var(--text);font-weight:600">Score</div>'
+          +hs.map(function(h){return '<div class="pga-sc-cell '+pgaSCClass(h.s,h.par)+'">'+h.s+'</div>';}).join('')
+          +'<div class="pga-sc-cell cs">'+(ouH>0?'+':'')+ouH+'</div></div>'
+        +'<div class="pga-sc-row"><div class="pga-sc-rlabel">Putts</div>'
+          +hs.map(function(h){return '<div class="pga-sc-cell cp">'+(h.p||'—')+'</div>';}).join('')
+          +'<div class="pga-sc-cell cp" style="color:var(--gold2);font-weight:600">'+sumPt(hs)+'</div></div>'
+        +'<div class="pga-sc-row"><div class="pga-sc-rlabel">GIR</div>'
+          +hs.map(function(h){return '<div class="pga-sc-cell cp" style="color:'+(h.gir?'var(--green2)':'var(--border)')+';">'+(h.gir?'✓':'·')+'</div>';}).join('')
+          +'<div class="pga-sc-cell cp" style="color:var(--green2);font-size:9px">'+hs.filter(function(h){return h.gir;}).length+'/'+hs.length+'</div></div>'
+        +'<div class="pga-sc-row"><div class="pga-sc-rlabel">FW</div>'
+          +hs.map(function(h){
+            if((h.par||0)<4) return '<div class="pga-sc-cell cp" style="color:var(--border)">·</div>';
+            return '<div class="pga-sc-cell cp" style="color:'+(h.fw===1?'var(--green2)':h.fw===2||h.fw===3?'var(--gold2)':'var(--border)')+';">'+(h.fw===1?'✓':h.fw===2?'→':h.fw===3?'←':'·')+'</div>';
+          }).join('')
+          +'<div class="pga-sc-cell cp" style="color:var(--green2);font-size:9px">'+hs.filter(function(h){return (h.par||0)>=4&&h.fw===1;}).length+'/'+hs.filter(function(h){return (h.par||0)>=4;}).length+'</div></div>'
+        +'</div>';
+    }
+
+    var tShots=sumS(holes), tPar=sumPar(holes), tPutts=sumPt(holes), tOu=tShots-tPar;
+    var girN=holes.filter(function(h){return h.gir;}).length;
+    var fwH=holes.filter(function(h){return (h.par||0)>=4&&h.fw===1;}).length;
+    var fwT=holes.filter(function(h){return (h.par||0)>=4;}).length;
+    var eagles=0,birdies=0,pars=0,bogeys=0,doubles=0;
+    holes.forEach(function(h){if(!h.par)return;var d=h.s-h.par;if(d<=-2)eagles++;else if(d===-1)birdies++;else if(d===0)pars++;else if(d===1)bogeys++;else doubles++;});
+
+    pgaWrap.innerHTML =
+      '<div class="pga-sc">'
+      +'<div class="pga-sc-legend">'
+        +'<div class="pga-sc-leg"><div class="pga-sc-dot pga-dot-eagle">E</div>Eagle</div>'
+        +'<div class="pga-sc-leg"><div class="pga-sc-dot pga-dot-birdie">B</div>Birdie</div>'
+        +'<div class="pga-sc-leg"><div class="pga-sc-dot pga-dot-par">P</div>Par</div>'
+        +'<div class="pga-sc-leg"><div class="pga-sc-dot pga-dot-bogey">1</div>Bogey</div>'
+        +'<div class="pga-sc-leg"><div class="pga-sc-dot pga-dot-double">2+</div>Doble+</div>'
+      +'</div>'
+      +renderPGAHalf(front,'Salida — Hoyos 1–9')
+      +'<div class="pga-sc-divider"></div>'
+      +renderPGAHalf(back,'Vuelta — Hoyos 10–18')
+      +'<div class="pga-sc-totrow">'
+        +'<div class="pga-sc-tot"><div class="pga-sc-tot-label">Total</div><div class="pga-sc-tot-val" style="color:'+(tOu<0?'var(--green2)':tOu===0?'var(--gold2)':'var(--red)')+'">'+ouFmt(tOu)+'</div></div>'
+        +'<div class="pga-sc-tot"><div class="pga-sc-tot-label">Golpes</div><div class="pga-sc-tot-val">'+tShots+'</div></div>'
+        +'<div class="pga-sc-tot"><div class="pga-sc-tot-label">Putts</div><div class="pga-sc-tot-val">'+tPutts+'</div></div>'
+        +'<div class="pga-sc-tot"><div class="pga-sc-tot-label">GIR</div><div class="pga-sc-tot-val" style="color:var(--green2)">'+girN+'/'+holes.length+'</div></div>'
+        +'<div class="pga-sc-tot"><div class="pga-sc-tot-label">FW</div><div class="pga-sc-tot-val">'+fwH+'/'+fwT+'</div></div>'
+      +'</div>'
+      +'<div class="pga-sc-resrow">'
+        +(eagles?'<div class="pga-sc-res"><div class="pga-sc-res-label" style="color:#006db3">Eagles</div><div class="pga-sc-res-val" style="color:#006db3">'+eagles+'</div></div>':'')
+        +(birdies?'<div class="pga-sc-res"><div class="pga-sc-res-label" style="color:var(--red)">Birdies</div><div class="pga-sc-res-val" style="color:var(--red)">'+birdies+'</div></div>':'')
+        +'<div class="pga-sc-res"><div class="pga-sc-res-label">Pares</div><div class="pga-sc-res-val">'+pars+'</div></div>'
+        +'<div class="pga-sc-res"><div class="pga-sc-res-label">Bogeys</div><div class="pga-sc-res-val">'+bogeys+'</div></div>'
+        +(doubles?'<div class="pga-sc-res"><div class="pga-sc-res-label">Dobles+</div><div class="pga-sc-res-val" style="color:var(--muted)">'+doubles+'</div></div>':'')
+      +'</div>'
+      +'</div>';
+
+  } else {
+    noEl.style.display='block';
+    netChartCard.style.display='none';
+    pgaWrap.innerHTML='';
+  }
   showPage('detail', document.getElementById('nav-detail'));
   document.getElementById('nav-detail').style.display='flex';
 }
