@@ -482,9 +482,9 @@ tr.excluded-row td:last-child { text-decoration: none; }
 }
 
 /* ── ROUND CARDS (Vuelta a Vuelta) — all sizes ── */
-/* Table always hidden; cards replace it */
+/* Table always hidden; cards replace it on all sizes */
 #page-rounds .scroll-table { display: none; }
-/* List visible by default — parent .page{display:none} hides it when inactive */
+/* Cards list: layout set here, visibility controlled by JS */
 #mobile-rounds-list { display: block; }
 @media (min-width: 769px) {
   #mobile-rounds-list { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -492,6 +492,7 @@ tr.excluded-row td:last-child { text-decoration: none; }
 }
 
 @media (max-width: 768px) {
+  #mobile-rounds-list { display: block; }
   .mr-card {
     background: var(--card); border: 1px solid var(--border); border-radius: 10px;
     margin-bottom: 8px; overflow: hidden; cursor: pointer;
@@ -1234,6 +1235,9 @@ function renderRounds() {
     return asc?(va||0)-(vb||0):(vb||0)-(va||0);
   });
   document.getElementById('rounds-count').textContent = rows.length + ' vueltas';
+  // Ensure mobile list is visible
+  var mrl = document.getElementById('mobile-rounds-list');
+  if (mrl) mrl.style.display = window.innerWidth >= 769 ? 'grid' : 'block';
 
   // Desktop table
   document.getElementById('rounds-tbody').innerHTML = rows.map(r => {
