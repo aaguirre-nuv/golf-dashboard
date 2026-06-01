@@ -481,11 +481,18 @@ tr.excluded-row td:last-child { text-decoration: none; }
   .club-dist { font-size: 16px; }
 }
 
-/* ── MOBILE ROUND CARDS (Vuelta a Vuelta) ── */
-@media (max-width: 768px) {
-  /* Hide desktop table, show cards */
+/* ── ROUND CARDS (Vuelta a Vuelta) — all sizes ── */
+
+@media (min-width: 769px) {
+  /* Desktop: 2-column card grid, only when rounds page is active */
+  #page-rounds.active #mobile-rounds-list { display: grid !important; grid-template-columns: 1fr 1fr; gap: 10px; }
   #page-rounds .scroll-table { display: none !important; }
-  #mobile-rounds-list { display: block !important; }
+  .mr-info { max-width: 140px !important; }
+}
+
+@media (max-width: 768px) {
+  #page-rounds .scroll-table { display: none !important; }
+  #page-rounds.active #mobile-rounds-list { display: block !important; }
 
   .mr-card {
     background: var(--card); border: 1px solid var(--border); border-radius: 10px;
@@ -512,7 +519,8 @@ tr.excluded-row td:last-child { text-decoration: none; }
   }
   .mr-excl.excluded { background: #f0e8e8; border-color: var(--red); color: var(--red); }
 }
-/* Hidden on desktop */
+/* Rounds list: shown only when inside active rounds page */
+#page-rounds.active #mobile-rounds-list { display: block; }
 #mobile-rounds-list { display: none; }
 
 
@@ -551,6 +559,14 @@ tr.excluded-row td:last-child { text-decoration: none; }
 .pga-sc-res:last-child { border-right:none; }
 .pga-sc-res-label { font-size:8px; text-transform:uppercase; letter-spacing:.3px; color:var(--muted); }
 .pga-sc-res-val { font-size:14px; font-weight:700; margin-top:2px; }
+
+/* Detail grid: stacked on mobile */
+@media (max-width: 768px) {
+  #detail-content-grid {
+    grid-template-columns: 1fr !important;
+  }
+  #detail-net-chart-card .chart-wrap { height: 180px !important; }
+}
 
 </style>
 </head>
@@ -802,13 +818,14 @@ tr.excluded-row td:last-child { text-decoration: none; }
       <p id="detail-sub"></p>
     </div>
     <div class="kpi-grid" id="detail-kpis"></div>
-    <!-- Net chart (mobile-first, visible on all sizes) -->
-    <div class="card" style="margin-bottom:16px" id="detail-net-chart-card">
-      <h3>Resultado vs par por hoyo</h3>
-      <div class="chart-wrap" style="height:200px"><canvas id="detail-chart"></canvas></div>
+    <!-- Net chart + PGA scorecard: side by side on desktop, stacked on mobile -->
+    <div id="detail-content-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+      <div class="card" id="detail-net-chart-card">
+        <h3>Resultado vs par por hoyo</h3>
+        <div class="chart-wrap" style="height:220px"><canvas id="detail-chart"></canvas></div>
+      </div>
+      <div id="detail-pga-scorecard"></div>
     </div>
-    <!-- PGA scorecard (replaces old table on mobile; shown on all) -->
-    <div id="detail-pga-scorecard"></div>
     <!-- No holes fallback -->
     <div id="detail-no-holes" class="card" style="display:none">
       <p style="color:var(--muted)">⚠️ Datos de hoyo a hoyo no disponibles para esta vuelta.<br>
