@@ -566,13 +566,15 @@ tr.excluded-row td:last-child { text-decoration: none; }
 
 
 /* ── CAMPOS MÓVIL ── */
+/* mobile-campos-list visible by default — parent page-courses controls visibility */
+#mobile-campos-list { display: block; }
 @media (max-width: 768px) {
-  /* Ocultar barras y tabla desktop en móvil */
   #course-bars-count, #course-bars-score { display: none; }
   #courses-table { display: none; }
-  #mobile-campos-list { display: block; }
 }
-#mobile-campos-list { display: none; }
+@media (min-width: 769px) {
+  #mobile-campos-list { display: none; }
+}
 
 /* Sort bar campos */
 .campos-sort-bar {
