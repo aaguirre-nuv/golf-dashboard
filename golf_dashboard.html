@@ -482,18 +482,16 @@ tr.excluded-row td:last-child { text-decoration: none; }
 }
 
 /* ── ROUND CARDS (Vuelta a Vuelta) — all sizes ── */
-
+/* Table always hidden; cards replace it */
+#page-rounds .scroll-table { display: none; }
+/* List visible by default — parent .page{display:none} hides it when inactive */
+#mobile-rounds-list { display: block; }
 @media (min-width: 769px) {
-  /* Desktop: 2-column card grid, only when rounds page is active */
-  #page-rounds.active #mobile-rounds-list { display: grid !important; grid-template-columns: 1fr 1fr; gap: 10px; }
-  #page-rounds .scroll-table { display: none !important; }
-  .mr-info { max-width: 140px !important; }
+  #mobile-rounds-list { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .mr-info { max-width: 140px; }
 }
 
 @media (max-width: 768px) {
-  #page-rounds .scroll-table { display: none !important; }
-  #page-rounds.active #mobile-rounds-list { display: block !important; }
-
   .mr-card {
     background: var(--card); border: 1px solid var(--border); border-radius: 10px;
     margin-bottom: 8px; overflow: hidden; cursor: pointer;
@@ -519,9 +517,7 @@ tr.excluded-row td:last-child { text-decoration: none; }
   }
   .mr-excl.excluded { background: #f0e8e8; border-color: var(--red); color: var(--red); }
 }
-/* Rounds list: shown only when inside active rounds page */
-#page-rounds.active #mobile-rounds-list { display: block; }
-#mobile-rounds-list { display: none; }
+
 
 
 /* ── PGA SCORECARD (detail view) ── */
