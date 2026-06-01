@@ -1431,6 +1431,10 @@ function showRoundDetail(roundId) {
     {label:'Fairways', val:fwPct!=null?(fwPct+'%'):'—',   sub:(r.fwH||0)+'/'+(r.fwT||0)+' fairways'},
   ].map(k=>`<div class="kpi"><div class="kpi-label">${k.label}</div><div class="kpi-val" style="font-size:28px">${k.val}</div><div class="kpi-sub">${k.sub}</div></div>`).join('');
 
+  // Hide mobile rounds list when showing detail
+  var mrl = document.getElementById('mobile-rounds-list');
+  if (mrl) mrl.style.display = '';
+
   var holes = HOLES_DATA[roundId];
   var noEl  = document.getElementById('detail-no-holes');
   var netChartCard = document.getElementById('detail-net-chart-card');
@@ -1577,6 +1581,9 @@ function showPage(name, el) {
   document.querySelectorAll('.nav-link,.bottom-nav-item').forEach(l=>l.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
   if(el)el.classList.add('active');
+  // Reset inline display on mobile-rounds-list when leaving rounds page
+  var mrl = document.getElementById('mobile-rounds-list');
+  if (mrl && name !== 'rounds') mrl.style.display = '';
   if(name==='rounds')   renderRounds();
   if(name==='micampo')  initMiCampo();
   if(name==='mibolsa')  initMiBolsa();
