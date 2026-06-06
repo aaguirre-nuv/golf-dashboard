@@ -1166,6 +1166,7 @@ function shortName(n) { return (CAMPOS_PAIS[n]||{}).short || n; }
 
 // ── GLOBALS (rellenos al cargar) ──────────────────────────────────
 let DATA=[], D18=[], D18_ARCCOS=[], CAMPOS_PAIS={}, HOLES_DATA={};
+const _v = new Date().toISOString().slice(0,10).replace(/-/g,'');
 
 // ── EXCLUSIONES (localStorage) ────────────────────────────────────
 const EXCL_KEY = 'golf_excluded_ids';
@@ -2216,7 +2217,6 @@ let _bolsaWindow = 'all';
 async function initMiBolsa() {
   if (PALOS_DATA) { renderBolsa(); return; }
   try {
-    const _v = new Date().toISOString().slice(0,10).replace(/-/g,'');
     PALOS_DATA = await (await fetch('data/palos.json?v='+_v)).json();
     renderBolsa();
   } catch(e) {
