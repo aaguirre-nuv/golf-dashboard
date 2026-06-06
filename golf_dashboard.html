@@ -484,38 +484,38 @@ tr.excluded-row td:last-child { text-decoration: none; }
 /* ── ROUND CARDS (Vuelta a Vuelta) — all sizes ── */
 /* Table always hidden; cards replace it */
 #page-rounds .scroll-table { display: none; }
-/* Cards list layout — visibility inherited from parent .page */
+/* Cards list — same layout on all screen sizes */
 #mobile-rounds-list { display: block; }
-@media (min-width: 769px) {
-  #mobile-rounds-list { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .mr-info { max-width: 140px; }
+.mr-card {
+  background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+  margin-bottom: 8px; overflow: hidden; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
-
-@media (max-width: 768px) {
-  .mr-card {
-    background: var(--card); border: 1px solid var(--border); border-radius: 10px;
-    margin-bottom: 8px; overflow: hidden; cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .mr-card:active { background: var(--card2); }
-  .mr-card.mr-excluded { opacity: .5; }
-  .mr-card-inner { padding: 10px 12px; display: flex; align-items: center; gap: 8px; }
-  .mr-info { display: flex; flex-direction: column; justify-content: center; gap: 2px; min-width: 0; flex: 0 0 auto; max-width: 108px; }
-  .mr-course { font-size: 13px; font-weight: 700; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.2; }
-  .mr-date { font-size: 10px; color: var(--muted); white-space: nowrap; }
-  .mr-pills { display: flex; gap: 4px; flex: 1; justify-content: flex-end; }
-  .mr-pill { display: flex; flex-direction: column; align-items: center; background: var(--card2); border-radius: 6px; padding: 5px 6px; min-width: 40px; }
-  .mr-pill-label { font-size: 7px; text-transform: uppercase; letter-spacing: .4px; color: var(--muted); line-height: 1; }
-  .mr-pill-val { font-size: 13px; font-weight: 700; line-height: 1.4; color: var(--text); }
-  .mr-pill-val.ou-pos { color: var(--red); }
-  .mr-pill-val.ou-neg { color: var(--green2); }
-  .mr-pill-val.ou-par { color: var(--gold2); }
-  .mr-excl {
-    background: none; border: 1px solid var(--border); color: var(--muted);
-    border-radius: 6px; padding: 4px 6px; font-size: 11px; cursor: pointer;
-    font-family: inherit; flex-shrink: 0;
-  }
-  .mr-excl.excluded { background: #f0e8e8; border-color: var(--red); color: var(--red); }
+.mr-card:active { background: var(--card2); }
+.mr-card.mr-excluded { opacity: .5; }
+.mr-card-inner { padding: 10px 12px; display: flex; align-items: center; gap: 8px; }
+.mr-info { display: flex; flex-direction: column; justify-content: center; gap: 2px; min-width: 0; flex: 0 0 auto; max-width: 140px; }
+.mr-course { font-size: 13px; font-weight: 700; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.2; }
+.mr-date { font-size: 10px; color: var(--muted); white-space: nowrap; }
+.mr-pills { display: flex; gap: 4px; flex: 1; justify-content: flex-end; }
+.mr-pill { display: flex; flex-direction: column; align-items: center; background: var(--card2); border-radius: 6px; padding: 5px 6px; min-width: 40px; }
+.mr-pill-label { font-size: 7px; text-transform: uppercase; letter-spacing: .4px; color: var(--muted); line-height: 1; }
+.mr-pill-val { font-size: 13px; font-weight: 700; line-height: 1.4; color: var(--text); }
+.mr-pill-val.ou-pos { color: var(--red); }
+.mr-pill-val.ou-neg { color: var(--green2); }
+.mr-pill-val.ou-par { color: var(--gold2); }
+.mr-excl {
+  background: none; border: 1px solid var(--border); color: var(--muted);
+  border-radius: 6px; padding: 4px 6px; font-size: 11px; cursor: pointer;
+  font-family: inherit; flex-shrink: 0;
+}
+.mr-excl.excluded { background: #f0e8e8; border-color: var(--red); color: var(--red); }
+/* Desktop: filters in a single row */
+@media (min-width: 769px) {
+  #page-rounds .filter-bar { display: flex; flex-direction: row; flex-wrap: wrap; gap: 8px; }
+  #page-rounds .filter-bar select { flex: 1; min-width: 140px; }
+  #page-rounds .filter-bar input { flex: 2; min-width: 180px; }
+  #mobile-rounds-list { max-width: 860px; }
 }
 
 
