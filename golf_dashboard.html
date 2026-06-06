@@ -2566,24 +2566,13 @@ function renderHmMobile() {
         +'<div class="hm-pi-val" style="color:var(--green2)">'+(cutoffDif!=null?cutoffDif.toFixed(1):'—')+'</div>'
         +'<div class="hm-pi-sub">'+cutoffLabel+'</div>'
       +'</div>'
-      +'<div class="hm-panel-item full">'\
-        +'<div class="hm-pi-label">Vueltas sin riesgo disponibles</div>'\
-        +'<div class="hm-pi-val" style="'+freeColor+'">'+freeCount+'</div>'\
-        +'<div class="hm-pi-sub">'+freeMsg+'</div>'\
-      +'</div>'\
-      +(deterioroHM!=null\
-        ? '<div class="hm-panel-item full" style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">'\
-          +'<div class="hm-pi-label">HM si no mejoras en la próxima</div>'\
-          +'<div class="hm-pi-val" style="color:var(--red)">'+deterioroHM.toFixed(1)+'</div>'\
-          +'<div class="hm-pi-sub">'\
-            +'Sale '+(deterioroSale?(deterioroSale.campo||deterioroSale.event||'').replace(/^TORNEO\\s+/i,'').substring(0,18):'--')+' '\
-            +(deterioroSale&&deterioroSale.diferencial!=null?'('+deterioroSale.diferencial.toFixed(1)+')':'')\
-            +' · Entra '+(deterioroEntra?(deterioroEntra.campo||deterioroEntra.event||'').replace(/^TORNEO\\s+/i,'').substring(0,18):'--')+' '\
-            +(deterioroEntra&&deterioroEntra.diferencial!=null?'('+deterioroEntra.diferencial.toFixed(1)+')':'')\
-          +'</div>'\
-          +'</div>'\
-        : '')\
-    +'</div>'\
+      +'<div class="hm-panel-item full">'
+        +'<div class="hm-pi-label">Vueltas sin riesgo disponibles</div>'
+        +'<div class="hm-pi-val" style="'+freeColor+'">'+freeCount+'</div>'
+        +'<div class="hm-pi-sub">'+freeMsg+'</div>'
+      +'</div>'
+      +(deterioroHM!=null ? '<div class="hm-panel-item full" style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px"><div class="hm-pi-label">HM si no mejoras en la próxima</div><div class="hm-pi-val" style="color:var(--red)">'+deterioroHM.toFixed(1)+'</div><div class="hm-pi-sub">Sale '+(deterioroSale?(deterioroSale.campo||deterioroSale.event||'').replace(/^TORNEO\s+/i,'').substring(0,18):'--')+' '+(deterioroSale&&deterioroSale.diferencial!=null?'('+deterioroSale.diferencial.toFixed(1)+')':'')+' · Entra '+(deterioroEntra?(deterioroEntra.campo||deterioroEntra.event||'').replace(/^TORNEO\s+/i,'').substring(0,18):'--')+' '+(deterioroEntra&&deterioroEntra.diferencial!=null?'('+deterioroEntra.diferencial.toFixed(1)+')':'')+'</div></div>' : '')
+    +'</div>'
     +'</div>';
 
   // ── Round cards ──
@@ -2770,4 +2759,4 @@ document.addEventListener('click', e => {
 
 </script>
 </body>
-</html>
+</html      +'<div class="hm-panel-item full">'        +'<div class="hm-pi-label">Vueltas sin riesgo disponibles</div>'        +'<div class="hm-pi-val" style="'+freeColor+'">'+freeCount+'</div>'        +'<div class="hm-pi-sub">'+freeMsg+'</div>'      +'</div>'      +(deterioroHM!=null ? '<div class="hm-panel-item full" style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px"><div class="hm-pi-label">HM si no mejoras en la próxima</div><div class="hm-pi-val" style="color:var(--red)">'+deterioroHM.toFixed(1)+'</div><div class="hm-pi-sub">Sale '+(deterioroSale?(deterioroSale.campo||deterioroSale.event||'').replace(/^TORNEO\s+/i,'').substring(0,18):'--')+' '+(deterioroSale&&deterioroSale.diferencial!=null?'('+deterioroSale.diferencial.toFixed(1)+')':'')+' · Entra '+(deterioroEntra?(deterioroEntra.campo||deterioroEntra.event||'').replace(/^TORNEO\s+/i,'').substring(0,18):'--')+' '+(deterioroEntra&&deterioroEntra.diferencial!=null?'('+deterioroEntra.diferencial.toFixed(1)+')':'')+'</div></div>' : '')    +'</div>'    +'</div>';>
