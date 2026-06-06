@@ -2216,7 +2216,8 @@ let _bolsaWindow = 'all';
 async function initMiBolsa() {
   if (PALOS_DATA) { renderBolsa(); return; }
   try {
-    PALOS_DATA = await (await fetch('data/palos.json')).json();
+    const _v = new Date().toISOString().slice(0,10).replace(/-/g,'');
+    PALOS_DATA = await (await fetch('data/palos.json?v='+_v)).json();
     renderBolsa();
   } catch(e) {
     document.getElementById('bolsa-content').innerHTML =
@@ -2370,15 +2371,15 @@ async function init() {
 
   try {
     const [rRes, cRes] = await Promise.all([
-      fetch('data/rounds.json'),
-      fetch('data/campos.json'),
+      fetch('data/rounds.json?v='+_v),
+      fetch('data/campos.json?v='+_v),
     ]);
     const rawRounds = await rRes.json();
     CAMPOS_PAIS = await cRes.json();
 
     // Intentar cargar holes y excluded (opcionales)
-    try { HOLES_DATA = await (await fetch('data/holes.json')).json(); } catch(e) {}
-    try { const excl = await (await fetch('data/excluded.json')).json(); excl.forEach(id=>EXCLUDED_IDS.add(id)); } catch(e) {}
+    try { HOLES_DATA = await (await fetch('data/holes.json?v='+_v)).json(); } catch(e) {}
+    try { const excl = await (await fetch('data/excluded.json?v='+_v)).json(); excl.forEach(id=>EXCLUDED_IDS.add(id)); } catch(e) {}
 
     DATA = mergeRounds(rawRounds).sort((a,b)=>b.date.localeCompare(a.date));
     loadExclusions();
@@ -2413,8 +2414,8 @@ async function initHandicap() {
   if (HCP_DATA) { renderHandicap(); return; }
   try {
     const [hd, cs] = await Promise.all([
-      fetch('data/handicap_rounds.json').then(r => r.json()),
-      fetch('data/campos_simulator.json').then(r => r.json()),
+      fetch('data/handicap_rounds.json?v='+_v).then(r => r.json()),
+      fetch('data/campos_simulator.json?v='+_v).then(r => r.json()),
     ]);
     HCP_DATA = hd; CAMPOS_SIM = cs;
     renderHandicap();
