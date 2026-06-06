@@ -3,7 +3,7 @@
   "hcpBase": 7.513,
   "lowest12m": 6.1,
   "nCounting": 20,
-  "nWithDif": 60,
+  "nWithDif": 61,
   "best8Avg": 7.513,
   "best8Difs": [
     3.1,
@@ -16,6 +16,25 @@
     9.4
   ],
   "rounds": [
+    {
+      "date": "2026-05-30",
+      "event": "CUARTILLOS  2026_SALDAÑA",
+      "campo": "Saldaña Golf",
+      "clubId": "7769",
+      "tee": "YELLOW",
+      "gross": 84,
+      "stableford": 32,
+      "playerHcp": 8,
+      "vc": 71.4,
+      "vs": 139,
+      "diferencial": 10.2,
+      "hcpAfter": 7.1,
+      "is_9holes": false,
+      "n": 1,
+      "inBest8": false,
+      "ranking": 11,
+      "counting": true
+    },
     {
       "date": "2026-05-14",
       "event": "FUNDACIÓN JIMENEZ DIAZ JUEVES 14/5/26",
@@ -30,7 +49,7 @@
       "diferencial": 14.2,
       "hcpAfter": 7.1,
       "is_9holes": false,
-      "n": 1,
+      "n": 2,
       "inBest8": false,
       "ranking": 17,
       "counting": true
@@ -49,7 +68,7 @@
       "diferencial": 6.5,
       "hcpAfter": 7.3,
       "is_9holes": false,
-      "n": 2,
+      "n": 3,
       "inBest8": true,
       "ranking": 3,
       "counting": true
@@ -68,7 +87,7 @@
       "diferencial": 13.2,
       "hcpAfter": 7.3,
       "is_9holes": false,
-      "n": 3,
+      "n": 4,
       "inBest8": false,
       "ranking": 16,
       "counting": true
@@ -87,7 +106,7 @@
       "diferencial": 11.9,
       "hcpAfter": 7.2,
       "is_9holes": false,
-      "n": 4,
+      "n": 5,
       "inBest8": false,
       "ranking": 14,
       "counting": true
@@ -106,7 +125,7 @@
       "diferencial": 12.0,
       "hcpAfter": 7.2,
       "is_9holes": false,
-      "n": 5,
+      "n": 6,
       "inBest8": false,
       "ranking": 15,
       "counting": true
@@ -125,7 +144,7 @@
       "diferencial": 14.3,
       "hcpAfter": 7.2,
       "is_9holes": false,
-      "n": 6,
+      "n": 7,
       "inBest8": false,
       "ranking": 18,
       "counting": true
@@ -144,7 +163,7 @@
       "diferencial": 14.5,
       "hcpAfter": 6.6,
       "is_9holes": false,
-      "n": 7,
+      "n": 8,
       "inBest8": false,
       "ranking": 19,
       "counting": true
@@ -163,7 +182,7 @@
       "diferencial": 5.7,
       "hcpAfter": 6.5,
       "is_9holes": false,
-      "n": 8,
+      "n": 9,
       "inBest8": true,
       "ranking": 2,
       "counting": true
@@ -182,9 +201,9 @@
       "diferencial": 10.2,
       "hcpAfter": 6.5,
       "is_9holes": false,
-      "n": 9,
+      "n": 10,
       "inBest8": false,
-      "ranking": 11,
+      "ranking": 12,
       "counting": true
     },
     {
@@ -201,7 +220,7 @@
       "diferencial": 8.5,
       "hcpAfter": 6.5,
       "is_9holes": false,
-      "n": 10,
+      "n": 11,
       "inBest8": true,
       "ranking": 4,
       "counting": true
@@ -220,7 +239,7 @@
       "diferencial": 9.4,
       "hcpAfter": 6.1,
       "is_9holes": false,
-      "n": 11,
+      "n": 12,
       "inBest8": true,
       "ranking": 8,
       "counting": true
@@ -239,7 +258,7 @@
       "diferencial": 3.1,
       "hcpAfter": 6.7,
       "is_9holes": false,
-      "n": 12,
+      "n": 13,
       "inBest8": true,
       "ranking": 1,
       "counting": true
@@ -258,7 +277,7 @@
       "diferencial": 9.4,
       "hcpAfter": 6.8,
       "is_9holes": false,
-      "n": 13,
+      "n": 14,
       "inBest8": false,
       "ranking": 9,
       "counting": true
@@ -277,7 +296,7 @@
       "diferencial": 9.7,
       "hcpAfter": 6.4,
       "is_9holes": false,
-      "n": 14,
+      "n": 15,
       "inBest8": false,
       "ranking": 10,
       "counting": true
@@ -296,7 +315,7 @@
       "diferencial": 8.6,
       "hcpAfter": 6.4,
       "is_9holes": false,
-      "n": 15,
+      "n": 16,
       "inBest8": true,
       "ranking": 5,
       "counting": true
@@ -315,7 +334,7 @@
       "diferencial": 11.6,
       "hcpAfter": 6.4,
       "is_9holes": false,
-      "n": 16,
+      "n": 17,
       "inBest8": false,
       "ranking": 13,
       "counting": true
@@ -334,7 +353,7 @@
       "diferencial": 9.3,
       "hcpAfter": 6.4,
       "is_9holes": false,
-      "n": 17,
+      "n": 18,
       "inBest8": true,
       "ranking": 7,
       "counting": true
@@ -353,7 +372,7 @@
       "diferencial": 9.0,
       "hcpAfter": 6.0,
       "is_9holes": false,
-      "n": 18,
+      "n": 19,
       "inBest8": true,
       "ranking": 6,
       "counting": true
@@ -372,7 +391,7 @@
       "diferencial": 24.3,
       "hcpAfter": 5.7,
       "is_9holes": false,
-      "n": 19,
+      "n": 20,
       "inBest8": false,
       "ranking": 20,
       "counting": true
@@ -391,10 +410,10 @@
       "diferencial": 10.8,
       "hcpAfter": 5.7,
       "is_9holes": false,
-      "n": 20,
+      "n": 21,
       "inBest8": false,
-      "ranking": 12,
-      "counting": true
+      "ranking": null,
+      "counting": false
     },
     {
       "date": "2024-11-16",
@@ -410,7 +429,7 @@
       "diferencial": 10.7,
       "hcpAfter": 5.4,
       "is_9holes": false,
-      "n": 21,
+      "n": 22,
       "inBest8": false,
       "ranking": null,
       "counting": false
@@ -429,7 +448,7 @@
       "diferencial": 7.5,
       "hcpAfter": 5.1,
       "is_9holes": false,
-      "n": 22,
+      "n": 23,
       "inBest8": false,
       "ranking": null,
       "counting": false
@@ -448,7 +467,7 @@
       "diferencial": 8.5,
       "hcpAfter": 5.0,
       "is_9holes": false,
-      "n": 23,
+      "n": 24,
       "inBest8": false,
       "ranking": null,
       "counting": false
@@ -467,7 +486,7 @@
       "diferencial": 12.8,
       "hcpAfter": 5.0,
       "is_9holes": false,
-      "n": 24,
+      "n": 25,
       "inBest8": false,
       "ranking": null,
       "counting": false
@@ -486,7 +505,7 @@
       "diferencial": 4.1,
       "hcpAfter": 5.5,
       "is_9holes": false,
-      "n": 25,
+      "n": 26,
       "inBest8": false,
       "ranking": null,
       "counting": false
@@ -505,7 +524,7 @@
       "diferencial": 7.8,
       "hcpAfter": 5.5,
       "is_9holes": false,
-      "n": 26,
+      "n": 27,
       "inBest8": false,
       "ranking": null,
       "counting": false
@@ -524,7 +543,7 @@
       "diferencial": 10.9,
       "hcpAfter": 5.5,
       "is_9holes": false,
-      "n": 27,
+      "n": 28,
       "inBest8": false,
       "ranking": null,
       "counting": false
@@ -543,7 +562,7 @@
       "diferencial": 5.4,
       "hcpAfter": 5.7,
       "is_9holes": false,
-      "n": 28,
+      "n": 29,
       "inBest8": false,
       "ranking": null,
       "counting": false
@@ -562,7 +581,7 @@
       "diferencial": 9.0,
       "hcpAfter": 5.3,
       "is_9holes": false,
-      "n": 29,
+      "n": 30,
       "inBest8": false,
       "ranking": null,
       "counting": false
@@ -581,7 +600,7 @@
       "diferencial": 13.8,
       "hcpAfter": 5.1,
       "is_9holes": false,
-      "n": 30,
+      "n": 31,
       "inBest8": false,
       "ranking": null,
       "counting": false
@@ -600,7 +619,7 @@
       "diferencial": 18.6,
       "hcpAfter": 5.1,
       "is_9holes": false,
-      "n": 31,
+      "n": 32,
       "inBest8": false,
       "ranking": null,
       "counting": false
@@ -619,7 +638,7 @@
       "diferencial": 7.1,
       "hcpAfter": 5.4,
       "is_9holes": false,
-      "n": 32,
+      "n": 33,
       "inBest8": false,
       "ranking": null,
       "counting": false
@@ -638,7 +657,7 @@
       "diferencial": 19.4,
       "hcpAfter": 5.4,
       "is_9holes": false,
-      "n": 33,
+      "n": 34,
       "inBest8": false,
       "ranking": null,
       "counting": false
@@ -657,7 +676,7 @@
       "diferencial": 14.7,
       "hcpAfter": 5.6,
       "is_9holes": false,
-      "n": 34,
+      "n": 35,
       "inBest8": false,
       "ranking": null,
       "counting": false
@@ -676,7 +695,7 @@
       "diferencial": 4.9,
       "hcpAfter": 6.0,
       "is_9holes": false,
-      "n": 35,
+      "n": 36,
       "inBest8": false,
       "ranking": null,
       "counting": false
@@ -695,7 +714,7 @@
       "diferencial": 12.2,
       "hcpAfter": 6.2,
       "is_9holes": false,
-      "n": 36,
+      "n": 37,
       "inBest8": false,
       "ranking": null,
       "counting": false
@@ -714,7 +733,7 @@
       "diferencial": 15.1,
       "hcpAfter": 6.1,
       "is_9holes": false,
-      "n": 37,
+      "n": 38,
       "inBest8": false,
       "ranking": null,
       "counting": false
@@ -733,7 +752,7 @@
       "diferencial": 9.4,
       "hcpAfter": 6.1,
       "is_9holes": false,
-      "n": 38,
+      "n": 39,
       "inBest8": false,
       "ranking": null,
       "counting": false
@@ -751,25 +770,6 @@
       "vs": 136,
       "diferencial": 12.7,
       "hcpAfter": 6.1,
-      "is_9holes": false,
-      "n": 39,
-      "inBest8": false,
-      "ranking": null,
-      "counting": false
-    },
-    {
-      "date": "2022-11-05",
-      "event": "TORNEO GREENTEAM JORNADA 10 OLIVAR",
-      "campo": "Olivar de la Hinojosa",
-      "clubId": "CM81",
-      "tee": "YELLOW",
-      "gross": 73,
-      "stableford": 43,
-      "playerHcp": 7,
-      "vc": 71.2,
-      "vs": 133,
-      "diferencial": 1.5,
-      "hcpAfter": 7.0,
       "is_9holes": false,
       "n": 40,
       "inBest8": false,
