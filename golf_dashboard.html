@@ -2538,6 +2538,25 @@ function renderHmMobile() {
     } else { break; }
   }
 
+  // ── Deterioro natural ──
+  var deterioroHM = null, deterioroSale = null, deterioroEntra = null;
+  var oldestTop8idx = -1;
+  for (var di = counting.length - 1; di >= 0; di--) {
+    if (top8ids.has(counting[di]._n)) { oldestTop8idx = di; break; }
+  }
+  if (oldestTop8idx >= 0) {
+    deterioroSale = counting[oldestTop8idx];
+    var outOfTop8 = counting.filter(function(r){ return !top8ids.has(r._n); });
+    outOfTop8.sort(function(a,b){ return a.diferencial - b.diferencial; });
+    deterioroEntra = outOfTop8.length > 0 ? outOfTop8[0] : null;
+    var newDifs = sorted_dif.filter(function(r){ return r._n !== deterioroSale._n; }).slice(0,7).map(function(r){ return r.diferencial; });
+    if (deterioroEntra) newDifs.push(deterioroEntra.diferencial);
+    if (newDifs.length === 8) {
+      var newBase = newDifs.reduce(function(a,b){ return a+b; }, 0) / 8;
+      deterioroHM = Math.round(newBase * 10) / 10;
+    }
+  }
+
   // ── Strategy panel ──
   var freeColor = freeCount>=3?'color:var(--green2)':freeCount>=1?'color:var(--gold2)':'color:var(--red)';
   var freeMsg   = freeCount===0?'La siguiente vuelta siempre afecta al HM'
@@ -2571,9 +2590,22 @@ function renderHmMobile() {
         +'<div class="hm-pi-val" style="'+freeColor+'">'+freeCount+'</div>'
         +'<div class="hm-pi-sub">'+freeMsg+'</div>'
       +'</div>'
-      +(deterioroHM!=null ? '<div class="hm-panel-item full" style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px"><div class="hm-pi-label">HM si no mejoras en la próxima</div><div class="hm-pi-val" style="color:var(--red)">'+deterioroHM.toFixed(1)+'</div><div class="hm-pi-sub">Sale '+(deterioroSale?(deterioroSale.campo||deterioroSale.event||'').replace(/^TORNEO\s+/i,'').substring(0,18):'--')+' '+(deterioroSale&&deterioroSale.diferencial!=null?'('+deterioroSale.diferencial.toFixed(1)+')':'')+' · Entra '+(deterioroEntra?(deterioroEntra.campo||deterioroEntra.event||'').replace(/^TORNEO\s+/i,'').substring(0,18):'--')+' '+(deterioroEntra&&deterioroEntra.diferencial!=null?'('+deterioroEntra.diferencial.toFixed(1)+')':'')+'</div></div>' : '')
     +'</div>'
     +'</div>';
+  // Deterioro card
+  if (deterioroHM !== null && panelEl) {
+    var dn = deterioroSale ? (deterioroSale.campo||deterioroSale.event||'').replace(/^TORNEO\s+/i,'').substring(0,20) : '--';
+    var dd = deterioroSale && deterioroSale.diferencial != null ? '('+deterioroSale.diferencial.toFixed(1)+')' : '';
+    var en = deterioroEntra ? (deterioroEntra.campo||deterioroEntra.event||'').replace(/^TORNEO\s+/i,'').substring(0,20) : '--';
+    var ed = deterioroEntra && deterioroEntra.diferencial != null ? '('+deterioroEntra.diferencial.toFixed(1)+')' : '';
+    var dCard = '<div class="hm-panel-item full" style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">'
+      +'<div class="hm-pi-label">HM si no mejoras en la próxima</div>'
+      +'<div class="hm-pi-val" style="color:var(--red)">'+deterioroHM.toFixed(1)+'</div>'
+      +'<div class="hm-pi-sub">Sale '+dn+' '+dd+' · Entra '+en+' '+ed+'</div>'
+      +'</div>';
+    var grid = panelEl.querySelector('.hm-panel-grid');
+    if (grid) grid.insertAdjacentHTML('beforeend', dCard);
+  }
 
   // ── Round cards ──
   var rows = counting.slice();
@@ -2759,4 +2791,4 @@ document.addEventListener('click', e => {
 
 </script>
 </body>
-</html      +'<div class="hm-panel-item full">'        +'<div class="hm-pi-label">Vueltas sin riesgo disponibles</div>'        +'<div class="hm-pi-val" style="'+freeColor+'">'+freeCount+'</div>'        +'<div class="hm-pi-sub">'+freeMsg+'</div>'      +'</div>'      +(deterioroHM!=null ? '<div class="hm-panel-item full" style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px"><div class="hm-pi-label">HM si no mejoras en la próxima</div><div class="hm-pi-val" style="color:var(--red)">'+deterioroHM.toFixed(1)+'</div><div class="hm-pi-sub">Sale '+(deterioroSale?(deterioroSale.campo||deterioroSale.event||'').replace(/^TORNEO\s+/i,'').substring(0,18):'--')+' '+(deterioroSale&&deterioroSale.diferencial!=null?'('+deterioroSale.diferencial.toFixed(1)+')':'')+' · Entra '+(deterioroEntra?(deterioroEntra.campo||deterioroEntra.event||'').replace(/^TORNEO\s+/i,'').substring(0,18):'--')+' '+(deterioroEntra&&deterioroEntra.diferencial!=null?'('+deterioroEntra.diferencial.toFixed(1)+')':'')+'</div></div>' : '')    +'</div>'    +'</div>';>
+</html>
